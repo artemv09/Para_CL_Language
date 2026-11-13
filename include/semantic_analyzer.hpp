@@ -1,0 +1,4 @@
+#ifndef SEMANTIC_ANALYZER_HPP_
+#define SEMANTIC_ANALYZER_HPP_
+
+#endif
