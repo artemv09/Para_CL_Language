@@ -14,6 +14,9 @@ class Lexer
         std::string code_text;
         std::string::iterator iterator_code = code_text.begin();
 
+        Source_Location location;
+
+        void advance();
         void skip_spaces_and_comments();
         std::string read_file(const std::string& file_name);
 

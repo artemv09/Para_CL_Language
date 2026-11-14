@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 
+#include "diagnostic.hpp"
+
 enum class Token_Type
 {
     EndFile,
@@ -41,8 +43,9 @@ typedef struct
 {
     Token_Type token_type;
     std::string token_name;
+    Source_Location location{};
 } Token_Value;
 
-std::unique_ptr<Token_Value> create_token(Token_Type token_type, std::string token_name);
+std::unique_ptr<Token_Value> create_token(Token_Type token_type, std::string token_name, Source_Location location);
 
 #endif

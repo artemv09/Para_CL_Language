@@ -22,6 +22,27 @@ namespace Lexer_namespace
         return text;
     }
 
+    void Lexer::advance()
+    {
+        if (iterator_code == code_text.end())
+        {
+            return;
+        }
+
+        if (*iterator_code == '\n')
+        {
+            ++location.line;
+            location.column = 1;
+        }
+        else
+        {
+            ++location.column;
+        }
+
+        ++location.offset;
+        ++iterator_code;
+    }
+
     void Lexer::skip_spaces_and_comments()
     {
         const auto end = code_text.end();
@@ -30,7 +51,7 @@ namespace Lexer_namespace
         {
             while (iterator_code != end && std::isspace(static_cast<unsigned char>(*iterator_code)))
             {
-                ++iterator_code;
+                advance();
             }
 
             if (iterator_code == end)
@@ -40,11 +61,12 @@ namespace Lexer_namespace
 
             if (*iterator_code == '/' && std::next(iterator_code) != end && *std::next(iterator_code) == '/')
             {
-                iterator_code += 2;
+                advance();
+                advance();
 
                 while (iterator_code != end && *iterator_code != '\n')
                 {
-                    ++iterator_code;
+                    advance();
                 }
                 continue;
             }
@@ -58,10 +80,11 @@ namespace Lexer_namespace
         skip_spaces_and_comments();
 
         const auto end = code_text.end();
+        const auto token_location = location;
         
         if (iterator_code == end)
         {
-            return create_token(Token_Type::EndFile, "");
+            return create_token(Token_Type::EndFile, "", token_location);
         }
 
         const auto start = iterator_code;
@@ -82,7 +105,7 @@ namespace Lexer_namespace
         {
             do
             {
-                ++iterator_code;
+                advance();
             }
             while (iterator_code != end && (is_identifier_start(*iterator_code) || is_digit(*iterator_code)));
 
@@ -106,14 +129,14 @@ namespace Lexer_namespace
                 token_type = Token_Type::Print;
             }
 
-            return create_token(token_type, std::move(token_name));
+            return create_token(token_type, std::move(token_name), token_location);
         }
 
         if (is_digit(*iterator_code))
         {
             do
             {
-                ++iterator_code;
+                advance();
             }
             while (iterator_code != end && is_digit(*iterator_code));
 
@@ -122,11 +145,11 @@ namespace Lexer_namespace
                 throw std::runtime_error("Invalid integer literal");
             }
 
-            return create_token(Token_Type::Integer, std::string(start, iterator_code));
+            return create_token(Token_Type::Integer, std::string(start, iterator_code), token_location);
         }
 
         const char character = *iterator_code;
-        ++iterator_code;
+        advance();
         Token_Type token_type;
 
         switch (character)
@@ -134,7 +157,7 @@ namespace Lexer_namespace
             case '=':
                 if (iterator_code != end && *iterator_code == '=')
                 {
-                    ++iterator_code;
+                    advance();
                     token_type = Token_Type::Equal;
                 }
                 else
@@ -146,7 +169,7 @@ namespace Lexer_namespace
             case '<':
                 if (iterator_code != end && *iterator_code == '=')
                 {
-                    ++iterator_code;
+                    advance();
                     token_type = Token_Type::LessEqual;
                 }
                 else
@@ -158,7 +181,7 @@ namespace Lexer_namespace
             case '>':
                 if (iterator_code != end && *iterator_code == '=')
                 {
-                    ++iterator_code;
+                    advance();
                     token_type = Token_Type::GreaterEqual;
                 }
                 else
@@ -172,7 +195,7 @@ namespace Lexer_namespace
                 {
                     throw std::runtime_error("Expected '=' after '!'");
                 }
-                ++iterator_code;
+                advance();
                 token_type = Token_Type::NotEqual;
                 break;
 
@@ -224,7 +247,7 @@ namespace Lexer_namespace
                 throw std::runtime_error(std::string("Unexpected character: ") + character);
         }
 
-        return create_token(token_type, std::string(start, iterator_code));
+        return create_token(token_type, std::string(start, iterator_code), token_location);
     }
 
 } //namespace Lexer

@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/paracl.dir/src/main.cpp.o -o paracl  libparacl_frontend.a 

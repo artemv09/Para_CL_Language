@@ -47,6 +47,23 @@ void expect_tokens(const std::string& path, const std::string& source,
     expect_token(lexer, {Type::EndFile, ""});
 }
 
+void expect_locations(const std::string& path, const std::string& source,
+                      const std::vector<Token_Value>& expected)
+{
+    write_source(path, source);
+    Lexer lexer(path);
+    for (const auto& token : expected)
+    {
+        const auto actual = lexer.next_token();
+        require(actual->token_type == token.token_type && actual->token_name == token.token_name,
+                "Wrong token while checking location");
+        require(actual->location.line == token.location.line &&
+                actual->location.column == token.location.column &&
+                actual->location.offset == token.location.offset,
+                "Wrong location for: " + token.token_name);
+    }
+}
+
 void expect_error(const std::string& path, const std::string& source)
 {
     write_source(path, source);
@@ -70,6 +87,31 @@ int main(int argc, char* argv[])
     {
         require(argc == 2, "Pass a temporary input file path");
         const std::string path = argv[1];
+
+        expect_locations(path, "name=12!=3;",
+                         {{Type::Identifier, "name", {1, 1, 0}},
+                          {Type::Assign, "=", {1, 5, 4}},
+                          {Type::Integer, "12", {1, 6, 5}},
+                          {Type::NotEqual, "!=", {1, 8, 7}},
+                          {Type::Integer, "3", {1, 10, 9}},
+                          {Type::Semicolon, ";", {1, 11, 10}},
+                          {Type::EndFile, "", {1, 12, 11}},
+                          {Type::EndFile, "", {1, 12, 11}}});
+        expect_locations(path, "x\nprint\n",
+                         {{Type::Identifier, "x", {1, 1, 0}},
+                          {Type::Print, "print", {2, 1, 2}},
+                          {Type::EndFile, "", {3, 1, 8}},
+                          {Type::EndFile, "", {3, 1, 8}}});
+        expect_locations(path, " \t// hi\n\t x//end",
+                         {{Type::Identifier, "x", {2, 3, 10}},
+                          {Type::EndFile, "", {2, 9, 16}},
+                          {Type::EndFile, "", {2, 9, 16}}});
+        expect_locations(path, "",
+                         {{Type::EndFile, "", {1, 1, 0}},
+                          {Type::EndFile, "", {1, 1, 0}}});
+        expect_locations(path, " \t\n//end",
+                         {{Type::EndFile, "", {2, 6, 8}},
+                          {Type::EndFile, "", {2, 6, 8}}});
 
         expect_tokens(path, "", {});
         expect_tokens(path, " \t\r\n\v\f// comment", {});
