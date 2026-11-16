@@ -30,6 +30,7 @@
 /home/artem/CProjects/Para_CL_Language/build/CMakeFiles/ContinuousSubmit.dir
 /home/artem/CProjects/Para_CL_Language/build/CMakeFiles/lexer_test.dir
 /home/artem/CProjects/Para_CL_Language/build/CMakeFiles/parser_test.dir
+/home/artem/CProjects/Para_CL_Language/build/CMakeFiles/semantic_analyzer_test.dir
 /home/artem/CProjects/Para_CL_Language/build/CMakeFiles/test.dir
 /home/artem/CProjects/Para_CL_Language/build/CMakeFiles/edit_cache.dir
 /home/artem/CProjects/Para_CL_Language/build/CMakeFiles/rebuild_cache.dir

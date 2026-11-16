@@ -9,6 +9,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o.d"
   "CMakeFiles/paracl_frontend.dir/src/parser.cpp.o"
   "CMakeFiles/paracl_frontend.dir/src/parser.cpp.o.d"
+  "CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o"
+  "CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o.d"
   "CMakeFiles/paracl_frontend.dir/src/token.cpp.o"
   "CMakeFiles/paracl_frontend.dir/src/token.cpp.o.d"
   "libparacl_frontend.a"

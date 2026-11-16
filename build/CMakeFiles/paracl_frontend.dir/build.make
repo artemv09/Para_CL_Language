@@ -153,6 +153,20 @@ CMakeFiles/paracl_frontend.dir/src/parser.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/paracl_frontend.dir/src/parser.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/artem/CProjects/Para_CL_Language/src/parser.cpp -o CMakeFiles/paracl_frontend.dir/src/parser.cpp.s
 
+CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o: CMakeFiles/paracl_frontend.dir/flags.make
+CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o: /home/artem/CProjects/Para_CL_Language/src/semantic_analyzer.cpp
+CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o: CMakeFiles/paracl_frontend.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/artem/CProjects/Para_CL_Language/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o -MF CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o.d -o CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o -c /home/artem/CProjects/Para_CL_Language/src/semantic_analyzer.cpp
+
+CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/artem/CProjects/Para_CL_Language/src/semantic_analyzer.cpp > CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.i
+
+CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/artem/CProjects/Para_CL_Language/src/semantic_analyzer.cpp -o CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.s
+
 # Object files for target paracl_frontend
 paracl_frontend_OBJECTS = \
 "CMakeFiles/paracl_frontend.dir/src/diagnostic.cpp.o" \
@@ -160,7 +174,8 @@ paracl_frontend_OBJECTS = \
 "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o" \
 "CMakeFiles/paracl_frontend.dir/src/ast.cpp.o" \
 "CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o" \
-"CMakeFiles/paracl_frontend.dir/src/parser.cpp.o"
+"CMakeFiles/paracl_frontend.dir/src/parser.cpp.o" \
+"CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o"
 
 # External object files for target paracl_frontend
 paracl_frontend_EXTERNAL_OBJECTS =
@@ -171,9 +186,10 @@ libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/ast.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/parser.cpp.o
+libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/build.make
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/artem/CProjects/Para_CL_Language/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX static library libparacl_frontend.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/artem/CProjects/Para_CL_Language/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX static library libparacl_frontend.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/paracl_frontend.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/paracl_frontend.dir/link.txt --verbose=$(VERBOSE)
 

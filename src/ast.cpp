@@ -3,7 +3,7 @@
 #include "graphviz.hpp"
 #include <utility>
 
-Node::Node(Source_Location location, Token_Type token_type): location(location), token_type(token_type)
+Node::Node(Source_Location location, Node_Type node_type): location(location), node_type(node_type)
 {
 }
 
@@ -29,7 +29,7 @@ namespace
     }
 }
 
-Integer_Expr::Integer_Expr(Source_Location location, std::int64_t value): Expr(location, Token_Type::Integer), value(value)
+Integer_Expr::Integer_Expr(Source_Location location, std::int64_t value): Expr(location, Node_Type::Integer), value(value)
 {
 }
 
@@ -39,7 +39,7 @@ std::size_t Integer_Expr::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-Variable_Expr::Variable_Expr(Source_Location location, std::string name): Expr(location, Token_Type::Identifier), name(std::move(name))
+Variable_Expr::Variable_Expr(Source_Location location, std::string name): Expr(location, Node_Type::Variable), name(std::move(name))
 {
 }
 
@@ -49,7 +49,7 @@ std::size_t Variable_Expr::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-Input_Expr::Input_Expr(Source_Location location): Expr(location, Token_Type::Question)
+Input_Expr::Input_Expr(Source_Location location): Expr(location, Node_Type::Input)
 {
 }
 
@@ -59,7 +59,7 @@ std::size_t Input_Expr::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-Unary_Expr::Unary_Expr(Source_Location location, Token_Type operation, std::unique_ptr<Expr> operand): Expr(location, operation), operation(operation), operand(std::move(operand))
+Unary_Expr::Unary_Expr(Source_Location location, Token_Type operation, std::unique_ptr<Expr> operand): Expr(location, Node_Type::Unary), operation(operation), operand(std::move(operand))
 {
 }
 
@@ -71,7 +71,7 @@ std::size_t Unary_Expr::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-Binary_Expr::Binary_Expr(Source_Location location, Token_Type operation, std::unique_ptr<Expr> left, std::unique_ptr<Expr> right): Expr(location, operation), operation(operation), left(std::move(left)), right(std::move(right))
+Binary_Expr::Binary_Expr(Source_Location location, Token_Type operation, std::unique_ptr<Expr> left, std::unique_ptr<Expr> right): Expr(location, Node_Type::Binary), operation(operation), left(std::move(left)), right(std::move(right))
 {
 }
 
@@ -84,19 +84,20 @@ std::size_t Binary_Expr::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-Assignment_Stmt::Assignment_Stmt(Source_Location location, std::string name, std::unique_ptr<Expr> expression): Stmt(location, Token_Type::Assign), name(std::move(name)), expression(std::move(expression))
+Assignment_Stmt::Assignment_Stmt(Source_Location location, std::unique_ptr<Variable_Expr> target, std::unique_ptr<Expr> expression): Stmt(location, Node_Type::Assignment), target(std::move(target)), expression(std::move(expression))
 {
 }
 
 std::size_t Assignment_Stmt::write_graphviz(Graphviz_Writer& writer) const
 {
-    const auto id = writer.add_node("Assignment_Stmt\n" + name + " =");
+    const auto id = writer.add_node("Assignment_Stmt\n=");
 
+    writer.add_edge(id, target -> write_graphviz(writer));
     writer.add_edge(id, expression -> write_graphviz(writer));
     return id;
 }
 
-Print_Stmt::Print_Stmt(Source_Location location, std::unique_ptr<Expr> expression): Stmt(location, Token_Type::Print), expression(std::move(expression))
+Print_Stmt::Print_Stmt(Source_Location location, std::unique_ptr<Expr> expression): Stmt(location, Node_Type::Print), expression(std::move(expression))
 {
 }
 
@@ -108,7 +109,7 @@ std::size_t Print_Stmt::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-Block_Stmt::Block_Stmt(Source_Location location): Stmt(location, Token_Type::LeftBrace)
+Block_Stmt::Block_Stmt(Source_Location location): Stmt(location, Node_Type::Block)
 {
 }
 
@@ -123,7 +124,8 @@ std::size_t Block_Stmt::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-If_Stmt::If_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Block_Stmt> body, std::unique_ptr<Stmt> alternative): Stmt(location, Token_Type::If), condition(std::move(condition)), body(std::move(body)), alternative(std::move(alternative))
+If_Stmt::If_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Block_Stmt> body, std::unique_ptr<Stmt> alternative)
+: Stmt(location, Node_Type::If), condition(std::move(condition)), body(std::move(body)), alternative(std::move(alternative))
 {
 }
 
@@ -140,7 +142,7 @@ std::size_t If_Stmt::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-While_Stmt::While_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Block_Stmt> body): Stmt(location, Token_Type::While), condition(std::move(condition)), body(std::move(body))
+While_Stmt::While_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Block_Stmt> body): Stmt(location, Node_Type::While), condition(std::move(condition)), body(std::move(body))
 {
 }
 

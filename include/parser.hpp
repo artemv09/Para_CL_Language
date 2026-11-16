@@ -8,9 +8,7 @@ class Parser
 {
     private:
         Lexer_namespace::Lexer& lexer;
-
         std::unique_ptr<Token_Value> current_token;
-
         std::string file_name;
 
         void advance();
@@ -34,7 +32,7 @@ class Parser
         std::unique_ptr<Expr> parse_primary();
 
     public:
-        explicit Parser(Lexer_namespace::Lexer& lexer, std::string file_name = "<input>");
+        explicit Parser(Lexer_namespace::Lexer& lexer, std::string file_name);
 
         Parser(const Parser&) = delete;
         Parser& operator=(const Parser&) = delete;

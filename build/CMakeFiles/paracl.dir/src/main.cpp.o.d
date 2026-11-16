@@ -195,4 +195,13 @@ CMakeFiles/paracl.dir/src/main.cpp.o: \
  /home/artem/CProjects/Para_CL_Language/include/token.hpp \
  /home/artem/CProjects/Para_CL_Language/include/diagnostic.hpp \
  /home/artem/CProjects/Para_CL_Language/include/lexer.hpp \
- /usr/include/c++/13/iostream
+ /home/artem/CProjects/Para_CL_Language/include/semantic_analyzer.hpp \
+ /home/artem/CProjects/Para_CL_Language/include/parser.hpp \
+ /usr/include/c++/13/unordered_set \
+ /usr/include/c++/13/bits/unordered_set.h \
+ /usr/include/c++/13/bits/hashtable.h \
+ /usr/include/c++/13/bits/hashtable_policy.h \
+ /usr/include/c++/13/bits/enable_special_members.h \
+ /usr/include/c++/13/bits/node_handle.h \
+ /usr/include/c++/13/bits/erase_if.h /usr/include/c++/13/utility \
+ /usr/include/c++/13/bits/stl_relops.h /usr/include/c++/13/iostream

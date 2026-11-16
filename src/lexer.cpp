@@ -150,6 +150,7 @@ namespace Lexer_namespace
 
         const char character = *iterator_code;
         advance();
+        
         Token_Type token_type;
 
         switch (character)

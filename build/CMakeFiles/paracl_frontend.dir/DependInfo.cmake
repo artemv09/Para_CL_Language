@@ -13,6 +13,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/artem/CProjects/Para_CL_Language/src/graphviz.cpp" "CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o" "gcc" "CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o.d"
   "/home/artem/CProjects/Para_CL_Language/src/lexer.cpp" "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o" "gcc" "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o.d"
   "/home/artem/CProjects/Para_CL_Language/src/parser.cpp" "CMakeFiles/paracl_frontend.dir/src/parser.cpp.o" "gcc" "CMakeFiles/paracl_frontend.dir/src/parser.cpp.o.d"
+  "/home/artem/CProjects/Para_CL_Language/src/semantic_analyzer.cpp" "CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o" "gcc" "CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o.d"
   "/home/artem/CProjects/Para_CL_Language/src/token.cpp" "CMakeFiles/paracl_frontend.dir/src/token.cpp.o" "gcc" "CMakeFiles/paracl_frontend.dir/src/token.cpp.o.d"
   )
 

@@ -9,15 +9,30 @@
 
 #include "token.hpp"
 
+enum class Node_Type
+{
+    Integer,
+    Variable,
+    Input,
+    Unary,
+    Binary,
+
+    Assignment,
+    Print,
+    Block,
+    If,
+    While
+};
+
 class Graphviz_Writer;
 
 class Node
 {
     public:
         Source_Location location;
-        Token_Type token_type;
+        Node_Type node_type;
 
-        explicit Node(Source_Location location, Token_Type token_type = Token_Type::EndFile);
+        explicit Node(Source_Location location, Node_Type node_type);
         
         virtual ~Node() = default;
 
@@ -86,10 +101,10 @@ class Binary_Expr : public Expr
 class Assignment_Stmt : public Stmt
 {
     public:
-        std::string name;
+        std::unique_ptr<Variable_Expr> target;
         std::unique_ptr<Expr> expression;
 
-        explicit Assignment_Stmt(Source_Location location, std::string name, std::unique_ptr<Expr> expression);
+        explicit Assignment_Stmt(Source_Location location, std::unique_ptr<Variable_Expr> target, std::unique_ptr<Expr> expression);
         std::size_t write_graphviz(Graphviz_Writer& writer) const override;
 };
 

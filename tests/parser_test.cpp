@@ -57,7 +57,7 @@ void expect_tree(const std::string& path, const std::string& source, const std::
         std::string value;
         if (separator != std::string::npos)
             value = label.substr(separator + 1);
-        if (type == "Assignment_Stmt") value += " =";
+        if (type == "Assignment_Stmt") value = "=";
         else if (type == "Input_Expr") value = "?";
         else if (type == "Print_Stmt") value = "print";
         else if (type == "Block_Stmt") value = "{}";
@@ -105,14 +105,14 @@ int main(int argc, char* argv[])
         require(argc == 2, "Pass a temporary input file path");
         const std::string path = argv[1];
         expect_tree(path, "", "Block_Stmt\n");
-        expect_tree(path, "x = 42;", "Block_Stmt\n  Assignment_Stmt x\n    Integer_Expr 42\n");
+        expect_tree(path, "x = 42;", "Block_Stmt\n  Assignment_Stmt\n    Variable_Expr x\n    Integer_Expr 42\n");
         expect_tree(path, "x = ?; print x;",
-                    "Block_Stmt\n  Assignment_Stmt x\n    Input_Expr\n  Print_Stmt\n    Variable_Expr x\n");
+                    "Block_Stmt\n  Assignment_Stmt\n    Variable_Expr x\n    Input_Expr\n  Print_Stmt\n    Variable_Expr x\n");
         expect_tree(path, "print 2 + 3 * 4;",
                     "Block_Stmt\n  Print_Stmt\n    Binary_Expr +\n      Integer_Expr 2\n"
                     "      Binary_Expr *\n        Integer_Expr 3\n        Integer_Expr 4\n");
         expect_tree(path, "x = (2 + 3) * 4;",
-                    "Block_Stmt\n  Assignment_Stmt x\n    Binary_Expr *\n      Binary_Expr +\n"
+                    "Block_Stmt\n  Assignment_Stmt\n    Variable_Expr x\n    Binary_Expr *\n      Binary_Expr +\n"
                     "        Integer_Expr 2\n        Integer_Expr 3\n      Integer_Expr 4\n");
         expect_tree(path, "print 10 - 3 - 2;",
                     "Block_Stmt\n  Print_Stmt\n    Binary_Expr -\n      Binary_Expr -\n"
@@ -154,9 +154,11 @@ int main(int argc, char* argv[])
         require(block && block->location.line == 2 && block->location.column == 1 &&
                 block->location.offset == 2, "Wrong block position");
         const auto* assignment = dynamic_cast<Assignment_Stmt*>(block->statements.at(0).get());
-        require(assignment && assignment->name == "x" && assignment->location.line == 3 &&
+        require(assignment && assignment->target && assignment->target->name == "x" && assignment->location.line == 3 &&
                 assignment->location.column == 2 && assignment->location.offset == 5,
                 "Wrong assignment position");
+        require(assignment->target->location.line == 3 && assignment->target->location.column == 2 &&
+                assignment->target->location.offset == 5, "Wrong assignment target position");
         const auto* binary = dynamic_cast<Binary_Expr*>(assignment->expression.get());
         require(binary && binary->operation == Token_Type::Plus && binary->location.column == 9 &&
                 binary->location.offset == 12, "Wrong binary position");
@@ -185,7 +187,7 @@ int main(int argc, char* argv[])
         const auto* condition = dynamic_cast<Binary_Expr*>(loop->condition.get());
         require(condition && condition->operation == Token_Type::Less, "Wrong Fibonacci condition");
         const auto* next = dynamic_cast<Assignment_Stmt*>(loop->body->statements.at(1).get());
-        require(next && next->name == "next" && dynamic_cast<Binary_Expr*>(next->expression.get()),
+        require(next && next->target && next->target->name == "next" && dynamic_cast<Binary_Expr*>(next->expression.get()),
                 "Wrong Fibonacci update");
 
         expect_error(path, "x = ;", "1:5", "выражение", "';'");

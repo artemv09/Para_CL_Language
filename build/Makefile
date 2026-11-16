@@ -542,6 +542,19 @@ parser_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/build
 .PHONY : parser_test/fast
 
+#=============================================================================
+# Target rules for targets named semantic_analyzer_test
+
+# Build rule for target.
+semantic_analyzer_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 semantic_analyzer_test
+.PHONY : semantic_analyzer_test
+
+# fast build rule for target.
+semantic_analyzer_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/semantic_analyzer_test.dir/build.make CMakeFiles/semantic_analyzer_test.dir/build
+.PHONY : semantic_analyzer_test/fast
+
 src/ast.o: src/ast.cpp.o
 .PHONY : src/ast.o
 
@@ -686,6 +699,30 @@ src/parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/parser.cpp.s
 .PHONY : src/parser.cpp.s
 
+src/semantic_analyzer.o: src/semantic_analyzer.cpp.o
+.PHONY : src/semantic_analyzer.o
+
+# target to build an object file
+src/semantic_analyzer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o
+.PHONY : src/semantic_analyzer.cpp.o
+
+src/semantic_analyzer.i: src/semantic_analyzer.cpp.i
+.PHONY : src/semantic_analyzer.i
+
+# target to preprocess a source file
+src/semantic_analyzer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.i
+.PHONY : src/semantic_analyzer.cpp.i
+
+src/semantic_analyzer.s: src/semantic_analyzer.cpp.s
+.PHONY : src/semantic_analyzer.s
+
+# target to generate assembly for a file
+src/semantic_analyzer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.s
+.PHONY : src/semantic_analyzer.cpp.s
+
 src/token.o: src/token.cpp.o
 .PHONY : src/token.o
 
@@ -758,6 +795,30 @@ tests/parser_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/tests/parser_test.cpp.s
 .PHONY : tests/parser_test.cpp.s
 
+tests/semantic_analyzer_test.o: tests/semantic_analyzer_test.cpp.o
+.PHONY : tests/semantic_analyzer_test.o
+
+# target to build an object file
+tests/semantic_analyzer_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/semantic_analyzer_test.dir/build.make CMakeFiles/semantic_analyzer_test.dir/tests/semantic_analyzer_test.cpp.o
+.PHONY : tests/semantic_analyzer_test.cpp.o
+
+tests/semantic_analyzer_test.i: tests/semantic_analyzer_test.cpp.i
+.PHONY : tests/semantic_analyzer_test.i
+
+# target to preprocess a source file
+tests/semantic_analyzer_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/semantic_analyzer_test.dir/build.make CMakeFiles/semantic_analyzer_test.dir/tests/semantic_analyzer_test.cpp.i
+.PHONY : tests/semantic_analyzer_test.cpp.i
+
+tests/semantic_analyzer_test.s: tests/semantic_analyzer_test.cpp.s
+.PHONY : tests/semantic_analyzer_test.s
+
+# target to generate assembly for a file
+tests/semantic_analyzer_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/semantic_analyzer_test.dir/build.make CMakeFiles/semantic_analyzer_test.dir/tests/semantic_analyzer_test.cpp.s
+.PHONY : tests/semantic_analyzer_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -799,6 +860,7 @@ help:
 	@echo "... paracl"
 	@echo "... paracl_frontend"
 	@echo "... parser_test"
+	@echo "... semantic_analyzer_test"
 	@echo "... src/ast.o"
 	@echo "... src/ast.i"
 	@echo "... src/ast.s"
@@ -817,6 +879,9 @@ help:
 	@echo "... src/parser.o"
 	@echo "... src/parser.i"
 	@echo "... src/parser.s"
+	@echo "... src/semantic_analyzer.o"
+	@echo "... src/semantic_analyzer.i"
+	@echo "... src/semantic_analyzer.s"
 	@echo "... src/token.o"
 	@echo "... src/token.i"
 	@echo "... src/token.s"
@@ -826,6 +891,9 @@ help:
 	@echo "... tests/parser_test.o"
 	@echo "... tests/parser_test.i"
 	@echo "... tests/parser_test.s"
+	@echo "... tests/semantic_analyzer_test.o"
+	@echo "... tests/semantic_analyzer_test.i"
+	@echo "... tests/semantic_analyzer_test.s"
 .PHONY : help
 
 

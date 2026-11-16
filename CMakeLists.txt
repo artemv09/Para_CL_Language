@@ -12,6 +12,7 @@ add_library(paracl_frontend
     src/ast.cpp
     src/graphviz.cpp
     src/parser.cpp
+    src/semantic_analyzer.cpp
 )
 target_include_directories(paracl_frontend PUBLIC include)
 
@@ -27,4 +28,8 @@ if(BUILD_TESTING)
     add_executable(parser_test tests/parser_test.cpp)
     target_link_libraries(parser_test PRIVATE paracl_frontend)
     add_test(NAME parser COMMAND parser_test ${CMAKE_CURRENT_BINARY_DIR}/parser_input.pcl)
+
+    add_executable(semantic_analyzer_test tests/semantic_analyzer_test.cpp)
+    target_link_libraries(semantic_analyzer_test PRIVATE paracl_frontend)
+    add_test(NAME semantic_analyzer COMMAND semantic_analyzer_test ${CMAKE_CURRENT_BINARY_DIR}/semantic_input.pcl)
 endif()

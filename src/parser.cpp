@@ -71,7 +71,7 @@ std::unique_ptr<Stmt> Parser::parse_statement()
         case Token_Type::LeftBrace: return parse_block();
         case Token_Type::If: return parse_if();
         case Token_Type::While: return parse_while();
-        default: error("начало инструкции (имя, 'print', '{', 'if' или 'while')");
+        default: error("начало инструкции 'varible', 'print', '{', 'if' или 'while'");
     }
 }
 
@@ -98,13 +98,15 @@ std::unique_ptr<Stmt> Parser::parse_assignment()
 {
     const auto name = expect(Token_Type::Identifier, "имя переменной");
 
+    auto target = std::make_unique<Variable_Expr>(name.location, name.token_name);
+
     expect(Token_Type::Assign, "'='");
 
     auto expression = parse_expression();
 
     expect(Token_Type::Semicolon, "';'");
 
-    return std::make_unique<Assignment_Stmt>(name.location, name.token_name, std::move(expression));
+    return std::make_unique<Assignment_Stmt>(name.location, std::move(target), std::move(expression));
 }
 
 std::unique_ptr<Stmt> Parser::parse_print()
@@ -280,7 +282,8 @@ std::unique_ptr<Expr> Parser::parse_primary()
     {
         auto expression = parse_expression();
         expect(Token_Type::RightParen, "')'");
+        
         return expression;
     }
-    error("выражение (число, имя, '?' или '(')");
+    error("выражение 'value', 'varible', '?' или '('");
 }
