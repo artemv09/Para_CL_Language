@@ -1,3 +1,7 @@
 AGENTS.md
 program.pcl
 run.sh
+/build/
+/graphviz/*
+!/graphviz/graphviz.hpp
+!/graphviz/graphviz.cpp
