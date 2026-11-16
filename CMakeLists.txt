@@ -10,13 +10,13 @@ add_library(paracl_frontend
     src/token.cpp
     src/lexer.cpp
     src/ast.cpp
-    src/graphviz.cpp
+    graphviz/graphviz.cpp
     src/parser.cpp
     src/semantic_analyzer.cpp
 )
-target_include_directories(paracl_frontend PUBLIC include)
+target_include_directories(paracl_frontend PUBLIC include graphviz)
 
-add_executable(paracl src/main.cpp)
+add_executable(paracl src/main.cpp src/interpreter.cpp)
 target_link_libraries(paracl PRIVATE paracl_frontend)
 
 include(CTest)

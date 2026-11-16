@@ -1,0 +1,5 @@
+lexer 2 0.0264958
+parser 0 0
+semantic_analyzer 2 0.0157607
+---
+parser

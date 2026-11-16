@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/artem/CProjects/Para_CL_Language/include
+CXX_INCLUDES = -I/home/artem/CProjects/Para_CL_Language/include -I/home/artem/CProjects/Para_CL_Language/graphviz
 
 CXX_FLAGS = -std=c++17
 

@@ -125,19 +125,19 @@ CMakeFiles/paracl_frontend.dir/src/ast.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/paracl_frontend.dir/src/ast.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/artem/CProjects/Para_CL_Language/src/ast.cpp -o CMakeFiles/paracl_frontend.dir/src/ast.cpp.s
 
-CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o: CMakeFiles/paracl_frontend.dir/flags.make
-CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o: /home/artem/CProjects/Para_CL_Language/src/graphviz.cpp
-CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o: CMakeFiles/paracl_frontend.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/artem/CProjects/Para_CL_Language/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o -MF CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o.d -o CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o -c /home/artem/CProjects/Para_CL_Language/src/graphviz.cpp
+CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o: CMakeFiles/paracl_frontend.dir/flags.make
+CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o: /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.cpp
+CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o: CMakeFiles/paracl_frontend.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/artem/CProjects/Para_CL_Language/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o -MF CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o.d -o CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o -c /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.cpp
 
-CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/artem/CProjects/Para_CL_Language/src/graphviz.cpp > CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.i
+CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.cpp > CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.i
 
-CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/artem/CProjects/Para_CL_Language/src/graphviz.cpp -o CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.s
+CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.cpp -o CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.s
 
 CMakeFiles/paracl_frontend.dir/src/parser.cpp.o: CMakeFiles/paracl_frontend.dir/flags.make
 CMakeFiles/paracl_frontend.dir/src/parser.cpp.o: /home/artem/CProjects/Para_CL_Language/src/parser.cpp
@@ -173,7 +173,7 @@ paracl_frontend_OBJECTS = \
 "CMakeFiles/paracl_frontend.dir/src/token.cpp.o" \
 "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o" \
 "CMakeFiles/paracl_frontend.dir/src/ast.cpp.o" \
-"CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o" \
+"CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o" \
 "CMakeFiles/paracl_frontend.dir/src/parser.cpp.o" \
 "CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o"
 
@@ -184,7 +184,7 @@ libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/diagnostic.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/token.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/ast.cpp.o
-libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o
+libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/parser.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/src/semantic_analyzer.cpp.o
 libparacl_frontend.a: CMakeFiles/paracl_frontend.dir/build.make

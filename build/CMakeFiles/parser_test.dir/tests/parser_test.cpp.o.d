@@ -161,7 +161,7 @@ CMakeFiles/parser_test.dir/tests/parser_test.cpp.o: \
  /home/artem/CProjects/Para_CL_Language/include/token.hpp \
  /home/artem/CProjects/Para_CL_Language/include/diagnostic.hpp \
  /home/artem/CProjects/Para_CL_Language/include/lexer.hpp \
- /home/artem/CProjects/Para_CL_Language/include/graphviz.hpp \
+ /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.hpp \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
  /usr/include/c++/13/system_error \
  /usr/include/x86_64-linux-gnu/c++/13/bits/error_constants.h \

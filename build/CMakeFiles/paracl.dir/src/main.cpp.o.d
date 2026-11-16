@@ -1,7 +1,7 @@
 CMakeFiles/paracl.dir/src/main.cpp.o: \
  /home/artem/CProjects/Para_CL_Language/src/main.cpp \
  /usr/include/stdc-predef.h \
- /home/artem/CProjects/Para_CL_Language/include/graphviz.hpp \
+ /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.hpp \
  /usr/include/c++/13/cstddef \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
@@ -177,10 +177,20 @@ CMakeFiles/paracl.dir/src/main.cpp.o: \
  /usr/include/c++/13/bits/unique_ptr.h \
  /usr/include/c++/13/ext/aligned_buffer.h \
  /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \
- /home/artem/CProjects/Para_CL_Language/include/parser.hpp \
+ /home/artem/CProjects/Para_CL_Language/include/interpreter.hpp \
+ /usr/include/c++/13/unordered_map \
+ /usr/include/c++/13/bits/unordered_map.h \
+ /usr/include/c++/13/bits/hashtable.h \
+ /usr/include/c++/13/bits/hashtable_policy.h \
+ /usr/include/c++/13/bits/enable_special_members.h \
+ /usr/include/c++/13/bits/node_handle.h \
+ /usr/include/c++/13/bits/erase_if.h /usr/include/c++/13/vector \
+ /usr/include/c++/13/bits/stl_uninitialized.h \
+ /usr/include/c++/13/bits/stl_vector.h \
+ /usr/include/c++/13/bits/stl_bvector.h \
+ /usr/include/c++/13/bits/vector.tcc \
  /home/artem/CProjects/Para_CL_Language/include/ast.hpp \
  /usr/include/c++/13/memory /usr/include/c++/13/bits/stl_tempbuf.h \
- /usr/include/c++/13/bits/stl_uninitialized.h \
  /usr/include/c++/13/bits/stl_raw_storage_iter.h \
  /usr/include/c++/13/bits/align.h \
  /usr/include/c++/13/bits/shared_ptr_atomic.h \
@@ -188,20 +198,13 @@ CMakeFiles/paracl.dir/src/main.cpp.o: \
  /usr/include/c++/13/bits/atomic_lockfree_defines.h \
  /usr/include/c++/13/backward/auto_ptr.h \
  /usr/include/c++/13/pstl/glue_memory_defs.h \
- /usr/include/c++/13/pstl/execution_defs.h /usr/include/c++/13/vector \
- /usr/include/c++/13/bits/stl_vector.h \
- /usr/include/c++/13/bits/stl_bvector.h \
- /usr/include/c++/13/bits/vector.tcc \
+ /usr/include/c++/13/pstl/execution_defs.h \
  /home/artem/CProjects/Para_CL_Language/include/token.hpp \
  /home/artem/CProjects/Para_CL_Language/include/diagnostic.hpp \
  /home/artem/CProjects/Para_CL_Language/include/lexer.hpp \
+ /home/artem/CProjects/Para_CL_Language/include/parser.hpp \
  /home/artem/CProjects/Para_CL_Language/include/semantic_analyzer.hpp \
  /home/artem/CProjects/Para_CL_Language/include/parser.hpp \
  /usr/include/c++/13/unordered_set \
- /usr/include/c++/13/bits/unordered_set.h \
- /usr/include/c++/13/bits/hashtable.h \
- /usr/include/c++/13/bits/hashtable_policy.h \
- /usr/include/c++/13/bits/enable_special_members.h \
- /usr/include/c++/13/bits/node_handle.h \
- /usr/include/c++/13/bits/erase_if.h /usr/include/c++/13/utility \
+ /usr/include/c++/13/bits/unordered_set.h /usr/include/c++/13/utility \
  /usr/include/c++/13/bits/stl_relops.h /usr/include/c++/13/iostream

@@ -3,9 +3,9 @@
 
 CMakeFiles/parser_test.dir/tests/parser_test.cpp.o
  /home/artem/CProjects/Para_CL_Language/tests/parser_test.cpp
+ /home/artem/CProjects/Para_CL_Language/graphviz/graphviz.hpp
  /home/artem/CProjects/Para_CL_Language/include/ast.hpp
  /home/artem/CProjects/Para_CL_Language/include/diagnostic.hpp
- /home/artem/CProjects/Para_CL_Language/include/graphviz.hpp
  /home/artem/CProjects/Para_CL_Language/include/lexer.hpp
  /home/artem/CProjects/Para_CL_Language/include/parser.hpp
  /home/artem/CProjects/Para_CL_Language/include/token.hpp

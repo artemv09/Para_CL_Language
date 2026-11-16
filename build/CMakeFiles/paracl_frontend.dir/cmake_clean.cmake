@@ -1,10 +1,10 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o"
+  "CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o.d"
   "CMakeFiles/paracl_frontend.dir/src/ast.cpp.o"
   "CMakeFiles/paracl_frontend.dir/src/ast.cpp.o.d"
   "CMakeFiles/paracl_frontend.dir/src/diagnostic.cpp.o"
   "CMakeFiles/paracl_frontend.dir/src/diagnostic.cpp.o.d"
-  "CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o"
-  "CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o.d"
   "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o"
   "CMakeFiles/paracl_frontend.dir/src/lexer.cpp.o.d"
   "CMakeFiles/paracl_frontend.dir/src/parser.cpp.o"

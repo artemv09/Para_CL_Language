@@ -555,6 +555,30 @@ semantic_analyzer_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/semantic_analyzer_test.dir/build.make CMakeFiles/semantic_analyzer_test.dir/build
 .PHONY : semantic_analyzer_test/fast
 
+graphviz/graphviz.o: graphviz/graphviz.cpp.o
+.PHONY : graphviz/graphviz.o
+
+# target to build an object file
+graphviz/graphviz.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.o
+.PHONY : graphviz/graphviz.cpp.o
+
+graphviz/graphviz.i: graphviz/graphviz.cpp.i
+.PHONY : graphviz/graphviz.i
+
+# target to preprocess a source file
+graphviz/graphviz.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.i
+.PHONY : graphviz/graphviz.cpp.i
+
+graphviz/graphviz.s: graphviz/graphviz.cpp.s
+.PHONY : graphviz/graphviz.s
+
+# target to generate assembly for a file
+graphviz/graphviz.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/graphviz/graphviz.cpp.s
+.PHONY : graphviz/graphviz.cpp.s
+
 src/ast.o: src/ast.cpp.o
 .PHONY : src/ast.o
 
@@ -603,29 +627,29 @@ src/diagnostic.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/diagnostic.cpp.s
 .PHONY : src/diagnostic.cpp.s
 
-src/graphviz.o: src/graphviz.cpp.o
-.PHONY : src/graphviz.o
+src/interpreter.o: src/interpreter.cpp.o
+.PHONY : src/interpreter.o
 
 # target to build an object file
-src/graphviz.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.o
-.PHONY : src/graphviz.cpp.o
+src/interpreter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl.dir/build.make CMakeFiles/paracl.dir/src/interpreter.cpp.o
+.PHONY : src/interpreter.cpp.o
 
-src/graphviz.i: src/graphviz.cpp.i
-.PHONY : src/graphviz.i
+src/interpreter.i: src/interpreter.cpp.i
+.PHONY : src/interpreter.i
 
 # target to preprocess a source file
-src/graphviz.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.i
-.PHONY : src/graphviz.cpp.i
+src/interpreter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl.dir/build.make CMakeFiles/paracl.dir/src/interpreter.cpp.i
+.PHONY : src/interpreter.cpp.i
 
-src/graphviz.s: src/graphviz.cpp.s
-.PHONY : src/graphviz.s
+src/interpreter.s: src/interpreter.cpp.s
+.PHONY : src/interpreter.s
 
 # target to generate assembly for a file
-src/graphviz.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl_frontend.dir/build.make CMakeFiles/paracl_frontend.dir/src/graphviz.cpp.s
-.PHONY : src/graphviz.cpp.s
+src/interpreter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/paracl.dir/build.make CMakeFiles/paracl.dir/src/interpreter.cpp.s
+.PHONY : src/interpreter.cpp.s
 
 src/lexer.o: src/lexer.cpp.o
 .PHONY : src/lexer.o
@@ -861,15 +885,18 @@ help:
 	@echo "... paracl_frontend"
 	@echo "... parser_test"
 	@echo "... semantic_analyzer_test"
+	@echo "... graphviz/graphviz.o"
+	@echo "... graphviz/graphviz.i"
+	@echo "... graphviz/graphviz.s"
 	@echo "... src/ast.o"
 	@echo "... src/ast.i"
 	@echo "... src/ast.s"
 	@echo "... src/diagnostic.o"
 	@echo "... src/diagnostic.i"
 	@echo "... src/diagnostic.s"
-	@echo "... src/graphviz.o"
-	@echo "... src/graphviz.i"
-	@echo "... src/graphviz.s"
+	@echo "... src/interpreter.o"
+	@echo "... src/interpreter.i"
+	@echo "... src/interpreter.s"
 	@echo "... src/lexer.o"
 	@echo "... src/lexer.i"
 	@echo "... src/lexer.s"

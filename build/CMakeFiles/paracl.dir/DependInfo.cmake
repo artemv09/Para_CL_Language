@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/artem/CProjects/Para_CL_Language/src/interpreter.cpp" "CMakeFiles/paracl.dir/src/interpreter.cpp.o" "gcc" "CMakeFiles/paracl.dir/src/interpreter.cpp.o.d"
   "/home/artem/CProjects/Para_CL_Language/src/main.cpp" "CMakeFiles/paracl.dir/src/main.cpp.o" "gcc" "CMakeFiles/paracl.dir/src/main.cpp.o.d"
   )
 
