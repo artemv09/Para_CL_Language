@@ -2,13 +2,13 @@
 
 void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_referaral)
 {
-    if(node -> node_type == Node_Type::Variable)
+    if (node -> node_type == Node_Type::Variable)
     {
         const std::string& name = static_cast<Variable_Expr*>(node) -> name;
 
-        if(assigment_referaral == Assigment_Parent::Right || assigment_referaral == Assigment_Parent::Non)
+        if (assigment_referaral == Assigment_Parent::Right || assigment_referaral == Assigment_Parent::Non)
         {
-            if(!checking_presence_advance(name))
+            if (!checking_presence_advance(name))
             {
                 error_undeclared(name, node -> location);
             }
@@ -17,7 +17,7 @@ void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_re
         }
         else
         {
-            if(!checking_presence_advance(name))
+            if (!checking_presence_advance(name))
             {
                 scopes.back().insert(name);
             }
@@ -25,7 +25,7 @@ void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_re
         }
     }
 
-    if(node -> node_type == Node_Type::Assignment)
+    if (node -> node_type == Node_Type::Assignment)
     {
         Assignment_Stmt* assignment = static_cast<Assignment_Stmt*>(node);
         segmantic_check(assignment -> expression.get(), Assigment_Parent::Right);
@@ -33,14 +33,14 @@ void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_re
         return;
     }
 
-    if(node -> node_type == Node_Type::Block)
+    if (node -> node_type == Node_Type::Block)
     {
         Block_Stmt* block = static_cast<Block_Stmt*>(node);
         scopes.emplace_back();
         try
         {
             std::size_t size_stat = block -> statements.size();
-            for(std::size_t i = 0; i < size_stat; i++)
+            for (std::size_t i = 0; i < size_stat; i++)
             {
                 Node* block_node = block -> statements.at(i).get();
                 segmantic_check(block_node, Assigment_Parent::Non);
@@ -56,14 +56,14 @@ void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_re
         return;
     }
 
-    if(node -> node_type == Node_Type::Unary)
+    if (node -> node_type == Node_Type::Unary)
     {
         Unary_Expr* unary = static_cast<Unary_Expr*>(node);
         segmantic_check(unary -> operand.get(), Assigment_Parent::Non);
         return;
     }
     
-    if(node -> node_type == Node_Type::Binary)
+    if (node -> node_type == Node_Type::Binary)
     {
         Binary_Expr* binary = static_cast<Binary_Expr*>(node);
         segmantic_check(binary -> left.get(), Assigment_Parent::Non);
@@ -71,26 +71,26 @@ void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_re
         return;
     }
     
-    if(node -> node_type == Node_Type::Print)
+    if (node -> node_type == Node_Type::Print)
     {
         Print_Stmt* print = static_cast<Print_Stmt*>(node);
         segmantic_check(print -> expression.get(), Assigment_Parent::Non);
         return;
     }
     
-    if(node -> node_type == Node_Type::If)
+    if (node -> node_type == Node_Type::If)
     {
         If_Stmt* conditional = static_cast<If_Stmt*>(node);
         segmantic_check(conditional -> condition.get(), Assigment_Parent::Non);
         segmantic_check(conditional -> body.get(), Assigment_Parent::Non);
-        if(conditional -> alternative)
+        if (conditional -> alternative)
         {
             segmantic_check(conditional -> alternative.get(), Assigment_Parent::Non);
         }
         return;
     }
     
-    if(node -> node_type == Node_Type::While)
+    if (node -> node_type == Node_Type::While)
     {
         While_Stmt* loop = static_cast<While_Stmt*>(node);
         segmantic_check(loop -> condition.get(), Assigment_Parent::Non);

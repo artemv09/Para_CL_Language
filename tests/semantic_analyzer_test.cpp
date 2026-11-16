@@ -7,7 +7,7 @@
 
 void require(bool condition, const std::string& message)
 {
-    if(!condition)
+    if (!condition)
     {
         throw std::runtime_error(message);
     }

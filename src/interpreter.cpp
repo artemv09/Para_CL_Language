@@ -10,21 +10,21 @@ Interpreter::Interpreter(): input(std::cin), output(std::cout)
 
 void Interpreter::run_code(const Node* program)
 {
-    if(program -> node_type == Node_Type::Assignment)
+    if (program -> node_type == Node_Type::Assignment)
     {
         const Assignment_Stmt* assignment = static_cast<const Assignment_Stmt*>(program);
         assign_variable((assignment -> target) -> name, evaluate((assignment -> expression).get()));
         return;
     }
 
-    if(program -> node_type == Node_Type::Block)
+    if (program -> node_type == Node_Type::Block)
     {
         const Block_Stmt* block = static_cast<const Block_Stmt*>(program);
         scopes.emplace_back();
         try
         {
             std::size_t size_stat = block -> statements.size();
-            for(std::size_t i = 0; i < size_stat; i++)
+            for (std::size_t i = 0; i < size_stat; i++)
             {
                 Node* block_node = block -> statements.at(i).get();
                 run_code(block_node);
@@ -40,17 +40,17 @@ void Interpreter::run_code(const Node* program)
         return;
     }
 
-    if(program -> node_type == Node_Type::Print)
+    if (program -> node_type == Node_Type::Print)
     {
         const Print_Stmt* print = static_cast<const Print_Stmt*>(program);
         output << evaluate((print -> expression).get()) << "\n";
         return;
     }
     
-    if(program -> node_type == Node_Type::If)
+    if (program -> node_type == Node_Type::If)
     {
         const If_Stmt* conditional = static_cast<const If_Stmt*>(program);
-        if(condition(conditional -> condition.get()))
+        if (condition(conditional -> condition.get()))
         {
             run_code(conditional -> body.get());
         }
@@ -61,11 +61,11 @@ void Interpreter::run_code(const Node* program)
         return;
     }
     
-    if(program -> node_type == Node_Type::While)
+    if (program -> node_type == Node_Type::While)
     {
         const While_Stmt* loop = static_cast<const While_Stmt*>(program);
         
-        while(condition(loop -> condition.get()))
+        while (condition(loop -> condition.get()))
         {
             run_code(loop -> body.get());
         }
@@ -76,7 +76,7 @@ void Interpreter::run_code(const Node* program)
 
 std::int64_t Interpreter::evaluate(const Expr* node)
 {
-    if(node -> node_type == Node_Type::Binary)
+    if (node -> node_type == Node_Type::Binary)
     {
         const Binary_Expr* binary = static_cast<const Binary_Expr*>(node);
         std::int64_t left = evaluate(binary -> left.get());
@@ -125,7 +125,7 @@ std::int64_t Interpreter::evaluate(const Expr* node)
         }
 
     }
-    if(node -> node_type == Node_Type::Unary)
+    if (node -> node_type == Node_Type::Unary)
     {
         const Unary_Expr* unar = static_cast<const Unary_Expr*>(node);
         std::int64_t left = evaluate(unar -> operand.get());
@@ -140,15 +140,15 @@ std::int64_t Interpreter::evaluate(const Expr* node)
             default: throw std::runtime_error("несуществующая унарная операция");
         }
     }
-    if(node -> node_type == Node_Type::Variable)
+    if (node -> node_type == Node_Type::Variable)
     {
         return read_variable(static_cast<const Variable_Expr*>(node) -> name); 
     }
-    if(node -> node_type == Node_Type::Integer)
+    if (node -> node_type == Node_Type::Integer)
     {
         return static_cast<const Integer_Expr*>(node) -> value;
     }
-    if(node -> node_type == Node_Type::Input)
+    if (node -> node_type == Node_Type::Input)
     {
         std::int64_t value;
         if (!(input >> value))
