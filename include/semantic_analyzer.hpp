@@ -33,6 +33,11 @@ class Segmantic_Analiz
         {
         }
 
+        Segmantic_Analiz(const Segmantic_Analiz&) = delete;
+        Segmantic_Analiz& operator=(const Segmantic_Analiz&) = delete;
+        Segmantic_Analiz(Segmantic_Analiz&&) = delete;
+        Segmantic_Analiz& operator=(Segmantic_Analiz&&) = delete;
+
         void segmantic_check(Node* node, Assigment_Parent assigment_referaral = Assigment_Parent::Non);
 
     };

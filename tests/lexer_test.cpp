@@ -1,199 +1,528 @@
+#include <gtest/gtest.h>
+#include <cstdio>
+#include <fstream>
+#include <iterator>
+#include <stdexcept>
+
 #include "lexer.hpp"
 
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-using Lexer_namespace::Lexer;
-using Type = Token_Type;
-
-void require(bool condition, const std::string& message)
+TEST(LexerTest, EmptySourceProducesEndFile)
 {
-    if (!condition)
     {
-        throw std::runtime_error(message);
+        std::ofstream file("test_lexer_1.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_1.pcl");
+    auto token = lexer.next_token();
+
+    ASSERT_NE(token, nullptr);
+    EXPECT_EQ(token -> token_type, Token_Type::EndFile);
+    EXPECT_EQ(token -> token_name, "");
+    EXPECT_EQ((token -> location).line, 1);
+    EXPECT_EQ((token -> location).column, 1);
+    EXPECT_EQ((token -> location).offset, 0);
+}
+
+TEST(LexerTest, RecognizesKeywords)
+{
+    {
+        std::ofstream file("test_lexer_2.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "if else while print else if";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_2.pcl");
+
+    const Token_Type expected_types[] = {
+        Token_Type::If,
+        Token_Type::Else,
+        Token_Type::While,
+        Token_Type::Print,
+        Token_Type::Else,
+        Token_Type::If,
+        Token_Type::EndFile
+    };
+
+    const std::string expected_names[] = {"if", "else", "while", "print", "else", "if", ""};
+
+    for (std::size_t i = 0; i < std::size(expected_types); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected_types[i]);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
     }
 }
 
-void write_source(const std::string& path, const std::string& source)
+TEST(LexerTest, DistinguishesKeywordsFromIdentifiers)
 {
-    std::ofstream file(path, std::ios::binary);
-    file << source;
-    require(static_cast<bool>(file), "Cannot write test input");
+    {
+        std::ofstream file("test_lexer_3.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "ifelse while2 print_ _if Else";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_3.pcl");
+
+    const std::string expected_names[] = {"ifelse", "while2", "print_", "_if", "Else"};
+
+    for (std::size_t i = 0; i < std::size(expected_names); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, Token_Type::Identifier);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+    }
+
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
 }
 
-void expect_token(Lexer& lexer, const Token_Value& expected)
+TEST(LexerTest, ReadsIdentifiers)
 {
+    {
+        std::ofstream file("test_lexer_4.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "x _name A1 counter_2";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_4.pcl");
+    const std::string expected_names[] = {"x", "_name", "A1", "counter_2"};
+
+    for (std::size_t i = 0; i < std::size(expected_names); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, Token_Type::Identifier);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+    }
+
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+}
+
+TEST(LexerTest, ReadsCompleteInteger)
+{
+    {
+        std::ofstream file("test_lexer_5.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "0 12345 0012 9223372036854775808 999999999999999999999999999999";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_5.pcl");
+    const std::string expected_names[] = {"0", "12345", "0012", "9223372036854775808", "999999999999999999999999999999"};
+
+    for (std::size_t i = 0; i < std::size(expected_names); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, Token_Type::Integer);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+    }
+
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+}
+
+TEST(LexerTest, TokenizesWithoutWhitespace)
+{
+    {
+        std::ofstream file("test_lexer_6.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "x=12+3;";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_6.pcl");
+
+    const Token_Type expected_types[] = {
+        Token_Type::Identifier,
+        Token_Type::Assign,
+        Token_Type::Integer,
+        Token_Type::Plus,
+        Token_Type::Integer,
+        Token_Type::Semicolon,
+        Token_Type::EndFile
+    };
+    const std::string expected_names[] = {"x", "=", "12", "+", "3", ";", ""};
+
+    for (std::size_t i = 0; i < std::size(expected_types); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected_types[i]);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+    }
+}
+
+TEST(LexerTest, RecognizesOperatorsAndDelimiters)
+{
+    const Token_Type expected_types[] = {
+        Token_Type::Plus,
+        Token_Type::Minus,
+        Token_Type::Multiplic,
+        Token_Type::Division,
+        Token_Type::Percent,
+        Token_Type::Assign,
+        Token_Type::Equal,
+        Token_Type::NotEqual,
+        Token_Type::Less,
+        Token_Type::LessEqual,
+        Token_Type::Greater,
+        Token_Type::GreaterEqual,
+        Token_Type::LeftParen,
+        Token_Type::RightParen,
+        Token_Type::LeftBrace,
+        Token_Type::RightBrace,
+        Token_Type::Semicolon,
+        Token_Type::Question
+    };
+    const std::string expected_names[] = {
+        "+", "-", "*", "/", "%", "=", "==", "!=", "<", "<=", ">", ">=", "(", ")", "{", "}", ";", "?"
+    };
+
+    {
+        std::ofstream file("test_lexer_7.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "+ - * / % = == != < <= > >= ( ) { } ; ?";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_7.pcl");
+
+    for (std::size_t i = 0; i < std::size(expected_types); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected_types[i]);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+    }
+
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+
+    for (std::size_t i = 0; i < std::size(expected_types); ++i)
+    {
+        SCOPED_TRACE(expected_names[i]);
+
+        {
+            std::ofstream file("test_lexer_7_end.pcl");
+            ASSERT_TRUE(file.is_open());
+
+            file << expected_names[i];
+            file.close();
+        }
+
+        Lexer single_lexer("test_lexer_7_end.pcl");
+        const auto token = single_lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected_types[i]);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+
+        const auto single_end = single_lexer.next_token();
+
+        ASSERT_NE(single_end, nullptr);
+        EXPECT_EQ(single_end -> token_type, Token_Type::EndFile);
+    }
+}
+
+TEST(LexerTest, ReadsLongestAvailableOperator)
+{
+    {
+        std::ofstream file("test_lexer_8.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "a===b!==c<=d>=e";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_8.pcl");
+    const Token_Type expected_types[] = {
+        Token_Type::Identifier,
+        Token_Type::Equal,
+        Token_Type::Assign,
+        Token_Type::Identifier,
+        Token_Type::NotEqual,
+        Token_Type::Assign,
+        Token_Type::Identifier,
+        Token_Type::LessEqual,
+        Token_Type::Identifier,
+        Token_Type::GreaterEqual,
+        Token_Type::Identifier,
+        Token_Type::EndFile
+    };
+    const std::string expected_names[] = {"a", "==", "=", "b", "!=", "=", "c", "<=", "d", ">=", "e", ""};
+
+    for (std::size_t i = 0; i < std::size(expected_types); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected_types[i]);
+        EXPECT_EQ(token -> token_name, expected_names[i]);
+    }
+}
+
+TEST(LexerTest, KeepsMinusSeparateFromInteger)
+{
+    {
+        std::ofstream file("test_lexer_9.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "-52";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_9.pcl");
+
+    const auto minus = lexer.next_token();
+    const auto integer = lexer.next_token();
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(minus, nullptr);
+    EXPECT_EQ(minus -> token_type, Token_Type::Minus);
+    EXPECT_EQ(minus -> token_name, "-");
+
+    ASSERT_NE(integer, nullptr);
+    EXPECT_EQ(integer -> token_type, Token_Type::Integer);
+    EXPECT_EQ(integer -> token_name, "52");
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+}
+
+TEST(LexerTest, TracksTokenLocations)
+{
+    std::ofstream file("test_lexer_11.pcl");
+    ASSERT_TRUE(file.is_open());
+
+    file << "x\n  print x;// hi\n\tname!=2;";
+    file.close();
+
+    Lexer lexer("test_lexer_11.pcl");
+
+    const std::size_t lines[]   = {1, 2, 2, 2, 3, 3, 3, 3, 3};
+    const std::size_t columns[] = {1, 3, 9, 10, 2, 6, 8, 9, 10};
+    const std::size_t offsets[] = {0, 4, 10, 11, 19, 23, 25, 26, 27};
+
+    for (std::size_t i = 0; i < std::size(lines); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ((token -> location).line, lines[i]);
+        EXPECT_EQ((token -> location).column, columns[i]);
+        EXPECT_EQ((token -> location).offset, offsets[i]);
+    }
+}
+
+TEST(LexerTest, RepeatedEndFileIsStable)
+{
+    std::ofstream file("test_lexer_12.pcl");
+    ASSERT_TRUE(file.is_open());
+
+    file << "x";
+    file.close();
+
+    Lexer lexer("test_lexer_12.pcl");
+
     const auto token = lexer.next_token();
-    require(token != nullptr, "next_token returned nullptr");
-    require(token->token_name == expected.token_name,
-            "Wrong token text; expected: " + expected.token_name);
-    require(token->token_type == expected.token_type,
-            "Wrong token type for: " + expected.token_name);
-}
 
-void expect_tokens(const std::string& path, const std::string& source,
-                   const std::vector<Token_Value>& expected)
-{
-    write_source(path, source);
-    Lexer lexer(path);
-    for (const auto& token : expected)
-    {
-        expect_token(lexer, token);
-    }
-    expect_token(lexer, {Type::EndFile, ""});
-    expect_token(lexer, {Type::EndFile, ""});
-}
+    ASSERT_NE(token, nullptr);
+    EXPECT_EQ(token -> token_type, Token_Type::Identifier);
+    EXPECT_EQ(token -> token_name, "x");
 
-void expect_locations(const std::string& path, const std::string& source,
-                      const std::vector<Token_Value>& expected)
-{
-    write_source(path, source);
-    Lexer lexer(path);
-    for (const auto& token : expected)
+    for (std::size_t i = 0; i < 3; ++i)
     {
-        const auto actual = lexer.next_token();
-        require(actual->token_type == token.token_type && actual->token_name == token.token_name,
-                "Wrong token while checking location");
-        require(actual->location.line == token.location.line &&
-                actual->location.column == token.location.column &&
-                actual->location.offset == token.location.offset,
-                "Wrong location for: " + token.token_name);
+        const auto end = lexer.next_token();
+
+        ASSERT_NE(end, nullptr);
+        EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+        EXPECT_EQ(end -> token_name, "");
+        EXPECT_EQ((end -> location).line, 1);
+        EXPECT_EQ((end -> location).column, 2);
+        EXPECT_EQ((end -> location).offset, 1);
     }
 }
 
-void expect_error(const std::string& path, const std::string& source)
+TEST(LexerTest, PreviousTokenRemainsUnchanged)
 {
-    write_source(path, source);
-    Lexer lexer(path);
+    {
+        std::ofstream file("test_lexer_13.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "first second";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_13.pcl");
+    const auto first = lexer.next_token();
+    const auto second = lexer.next_token();
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(first, nullptr);
+    EXPECT_EQ(first -> token_type, Token_Type::Identifier);
+    EXPECT_EQ(first -> token_name, "first");
+    EXPECT_EQ((first -> location).line, 1);
+    EXPECT_EQ((first -> location).column, 1);
+    EXPECT_EQ((first -> location).offset, 0);
+
+    ASSERT_NE(second, nullptr);
+    EXPECT_EQ(second -> token_type, Token_Type::Identifier);
+    EXPECT_EQ(second -> token_name, "second");
+    EXPECT_EQ((second -> location).column, 7);
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+}
+
+TEST(LexerTest, RejectsUnknownCharacter)
+{
+    const char symbols[] = {'@', '&', '|', '.', ',', '[', '"'};
+
+    for (std::size_t i = 0; i < std::size(symbols); ++i)
+    {
+        std::ofstream file("test_lexer_14.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << symbols[i];
+        file.close();
+
+        Lexer lexer("test_lexer_14.pcl");
+
+        EXPECT_THROW(lexer.next_token(), std::runtime_error);
+    }
+}
+
+TEST(LexerTest, RejectsMalformedInteger)
+{
+    const std::string sources[] = {"123abc", "12_name", "0x10"};
+
+    for (std::size_t i = 0; i < std::size(sources); ++i)
+    {
+        SCOPED_TRACE(sources[i]);
+
+        {
+            std::ofstream file("test_lexer_15.pcl");
+            ASSERT_TRUE(file.is_open());
+
+            file << sources[i];
+            file.close();
+        }
+
+        Lexer lexer("test_lexer_15.pcl");
+
+        EXPECT_THROW(lexer.next_token(), std::runtime_error);
+    }
+}
+
+TEST(LexerTest, RejectsStandaloneExclamation)
+{
+    const std::string sources[] = {"!", "!x"};
+
+    for (std::size_t i = 0; i < std::size(sources); ++i)
+    {
+        SCOPED_TRACE(sources[i]);
+
+        {
+            std::ofstream file("test_lexer_16.pcl");
+            ASSERT_TRUE(file.is_open());
+
+            file << sources[i];
+            file.close();
+        }
+
+        Lexer lexer("test_lexer_16.pcl");
+
+        EXPECT_THROW(lexer.next_token(), std::runtime_error);
+    }
+
+    {
+        std::ofstream file("test_lexer_16.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "!=";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_16.pcl");
+    const auto token = lexer.next_token();
+    const auto end = lexer.next_token();
+
+    ASSERT_NE(token, nullptr);
+    EXPECT_EQ(token -> token_type, Token_Type::NotEqual);
+    EXPECT_EQ(token -> token_name, "!=");
+
+    ASSERT_NE(end, nullptr);
+    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+}
+
+TEST(LexerTest, ReportsLexicalErrorLocation)
+{
+    {
+        std::ofstream file("test_lexer_17.pcl");
+        ASSERT_TRUE(file.is_open());
+
+        file << "x=1;\nprint @;";
+        file.close();
+    }
+
+    Lexer lexer("test_lexer_17.pcl");
+    const Token_Type expected_types[] = {
+        Token_Type::Identifier,
+        Token_Type::Assign,
+        Token_Type::Integer,
+        Token_Type::Semicolon,
+        Token_Type::Print
+    };
+
+    for (std::size_t i = 0; i < std::size(expected_types); ++i)
+    {
+        const auto token = lexer.next_token();
+
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected_types[i]);
+    }
+
     try
     {
-        while (lexer.next_token()->token_type != Type::EndFile)
-        {
-        }
+        lexer.next_token();
+        FAIL() << "Ожидалась ошибка для символа @";
     }
-    catch (const std::runtime_error&)
+    catch (const std::runtime_error& error)
     {
-        return;
-    }
-    throw std::runtime_error("Invalid input was accepted: " + source);
-}
+        const std::string message = error.what();
 
-int main(int argc, char* argv[])
-{
-    try
-    {
-        require(argc == 2, "Pass a temporary input file path");
-        const std::string path = argv[1];
-
-        expect_locations(path, "name=12!=3;",
-                         {{Type::Identifier, "name", {1, 1, 0}},
-                          {Type::Assign, "=", {1, 5, 4}},
-                          {Type::Integer, "12", {1, 6, 5}},
-                          {Type::NotEqual, "!=", {1, 8, 7}},
-                          {Type::Integer, "3", {1, 10, 9}},
-                          {Type::Semicolon, ";", {1, 11, 10}},
-                          {Type::EndFile, "", {1, 12, 11}},
-                          {Type::EndFile, "", {1, 12, 11}}});
-        expect_locations(path, "x\nprint\n",
-                         {{Type::Identifier, "x", {1, 1, 0}},
-                          {Type::Print, "print", {2, 1, 2}},
-                          {Type::EndFile, "", {3, 1, 8}},
-                          {Type::EndFile, "", {3, 1, 8}}});
-        expect_locations(path, " \t// hi\n\t x//end",
-                         {{Type::Identifier, "x", {2, 3, 10}},
-                          {Type::EndFile, "", {2, 9, 16}},
-                          {Type::EndFile, "", {2, 9, 16}}});
-        expect_locations(path, "",
-                         {{Type::EndFile, "", {1, 1, 0}},
-                          {Type::EndFile, "", {1, 1, 0}}});
-        expect_locations(path, " \t\n//end",
-                         {{Type::EndFile, "", {2, 6, 8}},
-                          {Type::EndFile, "", {2, 6, 8}}});
-
-        expect_tokens(path, "", {});
-        expect_tokens(path, " \t\r\n\v\f// comment", {});
-        expect_tokens(path, "// first\n // second\nname_2=123;// end",
-                      {{Type::Identifier, "name_2"}, {Type::Assign, "="},
-                       {Type::Integer, "123"}, {Type::Semicolon, ";"}});
-        expect_tokens(path, "if else while print ifelse Else while2 print_ _if",
-                      {{Type::If, "if"}, {Type::Else, "else"}, {Type::While, "while"},
-                       {Type::Print, "print"}, {Type::Identifier, "ifelse"},
-                       {Type::Identifier, "Else"}, {Type::Identifier, "while2"},
-                       {Type::Identifier, "print_"}, {Type::Identifier, "_if"}});
-        expect_tokens(path, "_name A1 0 123", {{Type::Identifier, "_name"},
-                      {Type::Identifier, "A1"}, {Type::Integer, "0"}, {Type::Integer, "123"}});
-
-        const std::vector<Token_Value> operators = {
-            {Type::Plus, "+"}, {Type::Minus, "-"}, {Type::Multiplic, "*"},
-            {Type::Division, "/"}, {Type::Percent, "%"}, {Type::Assign, "="},
-            {Type::Equal, "=="}, {Type::NotEqual, "!="}, {Type::Less, "<"},
-            {Type::LessEqual, "<="}, {Type::Greater, ">"}, {Type::GreaterEqual, ">="},
-            {Type::LeftParen, "("}, {Type::RightParen, ")"}, {Type::LeftBrace, "{"},
-            {Type::RightBrace, "}"}, {Type::Semicolon, ";"}, {Type::Question, "?"}
-        };
-        expect_tokens(path, "+ - * / % = == != < <= > >= ( ) { } ; ?", operators);
-        for (const auto& token : operators)
-        {
-            expect_tokens(path, token.token_name, {token});
-        }
-
-        expect_tokens(path, "if(x<=10){print x+2*3;}else{while(x!=0){x=x-1;}}",
-                      {{Type::If, "if"}, {Type::LeftParen, "("}, {Type::Identifier, "x"},
-                       {Type::LessEqual, "<="}, {Type::Integer, "10"}, {Type::RightParen, ")"},
-                       {Type::LeftBrace, "{"}, {Type::Print, "print"}, {Type::Identifier, "x"},
-                       {Type::Plus, "+"}, {Type::Integer, "2"}, {Type::Multiplic, "*"},
-                       {Type::Integer, "3"}, {Type::Semicolon, ";"}, {Type::RightBrace, "}"},
-                       {Type::Else, "else"}, {Type::LeftBrace, "{"}, {Type::While, "while"},
-                       {Type::LeftParen, "("}, {Type::Identifier, "x"}, {Type::NotEqual, "!="},
-                       {Type::Integer, "0"}, {Type::RightParen, ")"}, {Type::LeftBrace, "{"},
-                       {Type::Identifier, "x"}, {Type::Assign, "="}, {Type::Identifier, "x"},
-                       {Type::Minus, "-"}, {Type::Integer, "1"}, {Type::Semicolon, ";"},
-                       {Type::RightBrace, "}"}, {Type::RightBrace, "}"}});
-        expect_tokens(path, "a===b!==c", {{Type::Identifier, "a"}, {Type::Equal, "=="},
-                      {Type::Assign, "="}, {Type::Identifier, "b"}, {Type::NotEqual, "!="},
-                      {Type::Assign, "="}, {Type::Identifier, "c"}});
-        expect_tokens(path, "x// comment\r\n/", {{Type::Identifier, "x"}, {Type::Division, "/"}});
-        expect_tokens(path, " \tx=-12;", {{Type::Identifier, "x"}, {Type::Assign, "="},
-                      {Type::Minus, "-"}, {Type::Integer, "12"}, {Type::Semicolon, ";"}});
-
-        write_source(path, "first second");
-        Lexer lexer(path);
-        const auto first = lexer.next_token();
-        expect_token(lexer, {Type::Identifier, "second"});
-        expect_token(lexer, {Type::EndFile, ""});
-        require(first->token_type == Type::Identifier && first->token_name == "first",
-                "Reading another token changed the previous token");
-
-        Lexer empty;
-        expect_token(empty, {Type::EndFile, ""});
-        expect_token(empty, {Type::EndFile, ""});
-        for (const std::string source : {"@", "!", "!x", "&", "|", ".", "123abc", "12_name", "1.5", "\"text\""})
-        {
-            expect_error(path, source);
-        }
-        expect_error(path, std::string(1, '\0'));
-        expect_error(path, std::string(1, static_cast<char>(0xff)));
-
-        bool missing_file_reported = false;
-        try
-        {
-            Lexer missing(path + ".missing");
-        }
-        catch (const std::runtime_error&)
-        {
-            missing_file_reported = true;
-        }
-        require(missing_file_reported, "Missing input file was not reported");
-
-        std::cout << "Lexer tests passed\n";
-        return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << error.what() << '\n';
-        return 1;
+        EXPECT_NE(message.find("test_lexer_17.pcl:2:7: ошибка:"), std::string::npos) << message;
+        EXPECT_NE(message.find('@'), std::string::npos);
     }
 }

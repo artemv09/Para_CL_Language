@@ -27,6 +27,11 @@ class Interpreter
     public:
         Interpreter();
 
+        Interpreter(const Interpreter&) = delete;
+        Interpreter& operator=(const Interpreter&) = delete;
+        Interpreter(Interpreter&&) = delete;
+        Interpreter& operator=(Interpreter&&) = delete;
+
         void run_code(const Node* program);
 };
 

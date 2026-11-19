@@ -5,7 +5,7 @@
 #include <system_error>
 #include <utility>
 
-Parser::Parser(Lexer_namespace::Lexer& lexer, std::string file_name): lexer(lexer), file_name(std::move(file_name))
+Parser::Parser(Lexer& lexer, std::string file_name): lexer(lexer), file_name(std::move(file_name))
 {
     advance();
 }
@@ -264,7 +264,7 @@ std::unique_ptr<Expr> Parser::parse_primary()
 
         if (result.ec != std::errc{} || result.ptr != end)
         {
-            error("переполнение");
+            error("целое число в диапазоне int64_t");
         }
 
         advance();

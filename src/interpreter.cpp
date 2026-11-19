@@ -114,6 +114,11 @@ std::int64_t Interpreter::evaluate(const Expr* node)
                 {
                     throw std::runtime_error("деление на ноль");
                 }
+                if (left == minimum && right == -1)
+                {
+                    throw std::runtime_error(
+                        "переполнение int64_t при делении или вычислении остатка");
+                }
                 return (binary -> operation == Token_Type::Division) ? left / right : left % right;
             case Token_Type::Less: return left < right;
             case Token_Type::LessEqual: return left <= right;

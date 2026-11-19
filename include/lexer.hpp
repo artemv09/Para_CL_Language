@@ -6,13 +6,12 @@
 
 #include "token.hpp"
 
-namespace Lexer_namespace
-{
 class Lexer
 {
     private:
+        std::string file_name;
         std::string code_text;
-        std::string::iterator iterator_code = code_text.begin();
+        std::string::iterator iterator_code;
 
         Source_Location location;
 
@@ -25,7 +24,10 @@ class Lexer
 
         Lexer() = default;
 
-        Lexer(const std::string& file_name): code_text(read_file(file_name)), iterator_code(code_text.begin())
+        Lexer(const std::string& file_name):
+            file_name(file_name),
+            code_text(read_file(file_name)),
+            iterator_code(code_text.begin())
         {
         }
 
@@ -34,7 +36,5 @@ class Lexer
         Lexer(Lexer&&) = delete;
         Lexer& operator=(Lexer&&) = delete;
 };
-
-}
 
 #endif

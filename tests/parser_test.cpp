@@ -1,224 +1,301 @@
-#include "parser.hpp"
-#include "graphviz.hpp"
+#include <gtest/gtest.h>
+#include <limits>
 
-#include <vector>
+#include "test_program.hpp"
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
-void require(bool condition, const std::string& message)
+namespace
 {
-    if (!condition)
+    template<class T, class U>
+    const T& node_as(const std::unique_ptr<U>& node)
     {
-        throw std::runtime_error(message);
-    }
-}
-
-std::unique_ptr<Block_Stmt> parse(const std::string& path, const std::string& source)
-{
-    {
-        std::ofstream file(path, std::ios::binary);
-        file << source;
-        require(static_cast<bool>(file), "Cannot write test input");
-    }
-    Lexer_namespace::Lexer lexer(path);
-    Parser parser(lexer, path);
-    return parser.parse_program();
-}
-
-void expect_tree(const std::string& path, const std::string& source, const std::string& expected)
-{
-    const auto program = parse(path, source);
-    std::ostringstream output;
-    Graphviz_Writer(output).write(*program);
-    // Convert the expected indented tree to DOT independently of the AST traversal.
-    std::ostringstream nodes;
-    nodes << "digraph AST {\n  node [shape=box];\n  ordering=out;\n";
-    std::istringstream lines(expected);
-    std::string line;
-    std::vector<std::size_t> ids;
-    std::size_t id = 0;
-    while (std::getline(lines, line))
-    {
-        const auto depth = line.find_first_not_of(' ') / 2;
-        while (ids.size() > depth)
+        if (!node)
         {
-            const auto child = ids.back();
-            ids.pop_back();
-            if (!ids.empty())
-                nodes << "  node" << ids.back() << " -> node" << child << ";\n";
+            throw std::logic_error("В дереве отсутствует ожидаемый узел");
         }
-        const auto label = line.substr(depth * 2);
-        const auto separator = label.find(' ');
-        const auto type = label.substr(0, separator);
-        std::string value;
-        if (separator != std::string::npos)
-            value = label.substr(separator + 1);
-        if (type == "Assignment_Stmt") value = "=";
-        else if (type == "Input_Expr") value = "?";
-        else if (type == "Print_Stmt") value = "print";
-        else if (type == "Block_Stmt") value = "{}";
-        else if (type == "If_Stmt") value = "if";
-        else if (type == "While_Stmt") value = "while";
-        nodes << "  node" << id << " [label=\"" << type << "\\n" << value << "\"];\n";
-        ids.push_back(id++);
+        return dynamic_cast<const T&>(*node);
     }
-    while (ids.size() > 1)
+
+    void expect_location(const Node& node, std::size_t line, std::size_t column, std::size_t offset)
     {
-        const auto child = ids.back();
-        ids.pop_back();
-        nodes << "  node" << ids.back() << " -> node" << child << ";\n";
+        EXPECT_EQ(node.location.line, line);
+        EXPECT_EQ(node.location.column, column);
+        EXPECT_EQ(node.location.offset, offset);
     }
-    nodes << "}\n";
-    require(output.str() == nodes.str(), "Wrong AST for: " + source + "\n" + output.str());
+
+    void expect_parse_error(const std::string& source, const std::string& expected)
+    {
+        SCOPED_TRACE(source);
+        try
+        {
+            parse_program(source);
+            FAIL() << "Ожидалась ошибка разбора";
+        }
+        catch (const std::runtime_error& error)
+        {
+            const std::string message = error.what();
+            EXPECT_NE(message.find(expected), std::string::npos) << message;
+        }
+    }
 }
 
-void expect_error(const std::string& path, const std::string& source,
-                  const std::string& position, const std::string& expected,
-                  const std::string& received)
+TEST(ParserTest, EmptyProgramProducesEmptyBlock)
 {
-    try
-    {
-        parse(path, source);
-    }
-    catch (const std::runtime_error& error)
-    {
-        const std::string message = error.what();
-        require(message.find(path + ":" + position + ": ошибка:") == 0,
-                "Wrong error position: " + message);
-        require(message.find("ожидалось " + expected) != std::string::npos,
-                "Missing expected element: " + message);
-        require(message.find(", получен " + received) != std::string::npos,
-                "Missing received token: " + message);
-        return;
-    }
-    throw std::runtime_error("Invalid input accepted: " + source);
+    const auto program = parse_program("");
+
+    ASSERT_NE(program, nullptr);
+    EXPECT_TRUE(program -> statements.empty());
+    EXPECT_EQ(program -> node_type, Node_Type::Block);
+    expect_location(*program, 1, 1, 0);
 }
 
-int main(int argc, char* argv[])
+TEST(ParserTest, ParsesAssignmentTargetAndExpression)
 {
-    try
+    const auto program = parse_program("x=52;");
+    ASSERT_EQ(program -> statements.size(), 1u);
+    const auto& assignment = node_as<Assignment_Stmt>(program -> statements.at(0));
+
+    EXPECT_EQ(node_as<Variable_Expr>(assignment.target).name, "x");
+    EXPECT_EQ(node_as<Integer_Expr>(assignment.expression).value, 52);
+}
+
+TEST(ParserTest, ParsesPrintAndInput)
+{
+    const auto program = parse_program("print ?;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    EXPECT_NE(dynamic_cast<const Input_Expr*>(print.expression.get()), nullptr);
+}
+
+TEST(ParserTest, PreservesStatementOrder)
+{
+    const auto program = parse_program("x=1; print x; x=2;");
+    ASSERT_EQ(program -> statements.size(), 3);
+    const auto& first = node_as<Assignment_Stmt>(program -> statements.at(0));
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(1));
+    const auto& last = node_as<Assignment_Stmt>(program -> statements.at(2));
+
+    EXPECT_EQ(node_as<Integer_Expr>(first.expression).value, 1);
+    EXPECT_EQ(node_as<Variable_Expr>(print.expression).name, "x");
+    EXPECT_EQ(node_as<Integer_Expr>(last.expression).value, 2);
+}
+
+TEST(ParserTest, MultiplicationBindsTighterThanAddition)
+{
+    const auto program = parse_program("print 2+3*4;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& nested = node_as<Binary_Expr>(root.right);
+
+    EXPECT_EQ(root.operation, Token_Type::Plus);
+    EXPECT_EQ(node_as<Integer_Expr>(root.left).value, 2);
+    EXPECT_EQ(nested.operation, Token_Type::Multiplic);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.left).value, 3);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.right).value, 4);
+}
+
+TEST(ParserTest, ParenthesesOverridePrecedence)
+{
+    const auto program = parse_program("print ((2+3))*4;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& nested = node_as<Binary_Expr>(root.left);
+
+    EXPECT_EQ(root.operation, Token_Type::Multiplic);
+    EXPECT_EQ(node_as<Integer_Expr>(root.right).value, 4);
+    EXPECT_EQ(nested.operation, Token_Type::Plus);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.left).value, 2);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.right).value, 3);
+}
+
+TEST(ParserTest, SubtractionIsLeftAssociative)
+{
+    const auto program = parse_program("print 10-3-2;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& nested = node_as<Binary_Expr>(root.left);
+
+    EXPECT_EQ(root.operation, Token_Type::Minus);
+    EXPECT_EQ(node_as<Integer_Expr>(root.right).value, 2);
+    EXPECT_EQ(nested.operation, Token_Type::Minus);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.left).value, 10);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.right).value, 3);
+}
+
+TEST(ParserTest, DivisionAndModuloAreLeftAssociative)
+{
+    const auto program = parse_program("print 20/3%2;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& nested = node_as<Binary_Expr>(root.left);
+
+    EXPECT_EQ(root.operation, Token_Type::Percent);
+    EXPECT_EQ(node_as<Integer_Expr>(root.right).value, 2);
+    EXPECT_EQ(nested.operation, Token_Type::Division);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.left).value, 20);
+    EXPECT_EQ(node_as<Integer_Expr>(nested.right).value, 3);
+}
+
+TEST(ParserTest, ParsesNestedUnaryOperators)
+{
+    const auto program = parse_program("print -+x*2;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& product = node_as<Binary_Expr>(print.expression);
+    const auto& minus = node_as<Unary_Expr>(product.left);
+    const auto& plus = node_as<Unary_Expr>(minus.operand);
+
+    EXPECT_EQ(product.operation, Token_Type::Multiplic);
+    EXPECT_EQ(minus.operation, Token_Type::Minus);
+    EXPECT_EQ(plus.operation, Token_Type::Plus);
+    EXPECT_EQ(node_as<Variable_Expr>(plus.operand).name, "x");
+}
+
+TEST(ParserTest, ParsesNestedBlocks)
+{
+    const auto program = parse_program("{} {{}}");
+    ASSERT_EQ(program -> statements.size(), 2u);
+    const auto& first = node_as<Block_Stmt>(program -> statements.at(0));
+    const auto& second = node_as<Block_Stmt>(program -> statements.at(1));
+
+    EXPECT_TRUE(first.statements.empty());
+    ASSERT_EQ(second.statements.size(), 1u);
+    EXPECT_TRUE(node_as<Block_Stmt>(second.statements.at(0)).statements.empty());
+}
+
+TEST(ParserTest, IfWithoutElseHasNoAlternative)
+{
+    const auto program = parse_program("if(x){}");
+    const auto& branch = node_as<If_Stmt>(program -> statements.at(0));
+
+    EXPECT_EQ(node_as<Variable_Expr>(branch.condition).name, "x");
+    ASSERT_NE(branch.body, nullptr);
+    EXPECT_TRUE(branch.body -> statements.empty());
+    EXPECT_EQ(branch.alternative, nullptr);
+}
+
+TEST(ParserTest, ParsesElseIfChain)
+{
+    for (const std::string ending : {"", "else{}"})
     {
-        require(argc == 2, "Pass a temporary input file path");
-        const std::string path = argv[1];
-        expect_tree(path, "", "Block_Stmt\n");
-        expect_tree(path, "x = 42;", "Block_Stmt\n  Assignment_Stmt\n    Variable_Expr x\n    Integer_Expr 42\n");
-        expect_tree(path, "x = ?; print x;",
-                    "Block_Stmt\n  Assignment_Stmt\n    Variable_Expr x\n    Input_Expr\n  Print_Stmt\n    Variable_Expr x\n");
-        expect_tree(path, "print 2 + 3 * 4;",
-                    "Block_Stmt\n  Print_Stmt\n    Binary_Expr +\n      Integer_Expr 2\n"
-                    "      Binary_Expr *\n        Integer_Expr 3\n        Integer_Expr 4\n");
-        expect_tree(path, "x = (2 + 3) * 4;",
-                    "Block_Stmt\n  Assignment_Stmt\n    Variable_Expr x\n    Binary_Expr *\n      Binary_Expr +\n"
-                    "        Integer_Expr 2\n        Integer_Expr 3\n      Integer_Expr 4\n");
-        expect_tree(path, "print 10 - 3 - 2;",
-                    "Block_Stmt\n  Print_Stmt\n    Binary_Expr -\n      Binary_Expr -\n"
-                    "        Integer_Expr 10\n        Integer_Expr 3\n      Integer_Expr 2\n");
-        expect_tree(path, "print -+(-(2));",
-                    "Block_Stmt\n  Print_Stmt\n    Unary_Expr -\n      Unary_Expr +\n"
-                    "        Unary_Expr -\n          Integer_Expr 2\n");
-        expect_tree(path, "print 1 < 2 <= 3 == 4 != 5;",
-                    "Block_Stmt\n  Print_Stmt\n    Binary_Expr !=\n      Binary_Expr ==\n"
-                    "        Binary_Expr <=\n          Binary_Expr <\n            Integer_Expr 1\n"
-                    "            Integer_Expr 2\n          Integer_Expr 3\n        Integer_Expr 4\n"
-                    "      Integer_Expr 5\n");
-        expect_tree(path, "print 8 / 2 % 3; print 3 > 2 >= 1;",
-                    "Block_Stmt\n  Print_Stmt\n    Binary_Expr %\n      Binary_Expr /\n"
-                    "        Integer_Expr 8\n        Integer_Expr 2\n      Integer_Expr 3\n"
-                    "  Print_Stmt\n    Binary_Expr >=\n      Binary_Expr >\n"
-                    "        Integer_Expr 3\n        Integer_Expr 2\n      Integer_Expr 1\n");
-        expect_tree(path, "{} {{}}", "Block_Stmt\n  Block_Stmt\n  Block_Stmt\n    Block_Stmt\n");
-        expect_tree(path, "if (x) {}", "Block_Stmt\n  If_Stmt\n    Variable_Expr x\n    Block_Stmt\n");
-        expect_tree(path, "if (x) {} else {}",
-                    "Block_Stmt\n  If_Stmt\n    Variable_Expr x\n    Block_Stmt\n    Block_Stmt\n");
-        const std::string chain = "Block_Stmt\n  If_Stmt\n    Integer_Expr 1\n    Block_Stmt\n"
-                                  "    If_Stmt\n      Integer_Expr 2\n      Block_Stmt\n"
-                                  "      If_Stmt\n        Integer_Expr 3\n        Block_Stmt\n";
-        expect_tree(path, "if(1){}else if(2){}else if(3){}", chain);
-        expect_tree(path, "if(1){}else if(2){}else if(3){}else{}", chain + "        Block_Stmt\n");
-        expect_tree(path, "while(x){if(y){while(z){}}else{}}",
-                    "Block_Stmt\n  While_Stmt\n    Variable_Expr x\n    Block_Stmt\n"
-                    "      If_Stmt\n        Variable_Expr y\n        Block_Stmt\n"
-                    "          While_Stmt\n            Variable_Expr z\n            Block_Stmt\n"
-                    "        Block_Stmt\n");
-        expect_tree(path, "print 9223372036854775807;",
-                    "Block_Stmt\n  Print_Stmt\n    Integer_Expr 9223372036854775807\n");
+        SCOPED_TRACE(ending);
+        const auto program = parse_program("if(a){}else if(b){}else if(c){}" + ending);
+        const auto& first = node_as<If_Stmt>(program -> statements.at(0));
+        const auto& second = node_as<If_Stmt>(first.alternative);
+        const auto& third = node_as<If_Stmt>(second.alternative);
 
-        const auto program = parse(path, " \n{\n x = -2 + ?;\n print x;\n}");
-        require(program->location.line == 1 && program->location.column == 1 &&
-                program->location.offset == 0, "Wrong root position");
-        const auto* block = dynamic_cast<Block_Stmt*>(program->statements.at(0).get());
-        require(block && block->location.line == 2 && block->location.column == 1 &&
-                block->location.offset == 2, "Wrong block position");
-        const auto* assignment = dynamic_cast<Assignment_Stmt*>(block->statements.at(0).get());
-        require(assignment && assignment->target && assignment->target->name == "x" && assignment->location.line == 3 &&
-                assignment->location.column == 2 && assignment->location.offset == 5,
-                "Wrong assignment position");
-        require(assignment->target->location.line == 3 && assignment->target->location.column == 2 &&
-                assignment->target->location.offset == 5, "Wrong assignment target position");
-        const auto* binary = dynamic_cast<Binary_Expr*>(assignment->expression.get());
-        require(binary && binary->operation == Token_Type::Plus && binary->location.column == 9 &&
-                binary->location.offset == 12, "Wrong binary position");
-        const auto* unary = dynamic_cast<Unary_Expr*>(binary->left.get());
-        require(unary && unary->location.column == 6 && unary->location.offset == 9,
-                "Wrong unary position");
-        const auto* integer = dynamic_cast<Integer_Expr*>(unary->operand.get());
-        require(integer && integer->value == 2 && integer->location.column == 7 &&
-                integer->location.offset == 10, "Wrong integer position");
-        const auto* input = dynamic_cast<Input_Expr*>(binary->right.get());
-        require(input && input->location.column == 11 && input->location.offset == 14,
-                "Wrong input position");
-        const auto* print = dynamic_cast<Print_Stmt*>(block->statements.at(1).get());
-        require(print && print->location.line == 4 && print->location.column == 2,
-                "Wrong print position");
-        const auto* variable = dynamic_cast<Variable_Expr*>(print->expression.get());
-        require(variable && variable->name == "x" && variable->location.column == 8,
-                "Wrong variable position");
-
-        // A conventional Fibonacci program; the original assignment is absent from the repository.
-        const auto fibonacci = parse(path,
-            "n=?; a=0; b=1; i=0; while(i<n){print a; next=a+b; a=b; b=next; i=i+1;}");
-        require(fibonacci->statements.size() == 5, "Wrong Fibonacci program structure");
-        const auto* loop = dynamic_cast<While_Stmt*>(fibonacci->statements.at(4).get());
-        require(loop && loop->body->statements.size() == 5, "Wrong Fibonacci loop structure");
-        const auto* condition = dynamic_cast<Binary_Expr*>(loop->condition.get());
-        require(condition && condition->operation == Token_Type::Less, "Wrong Fibonacci condition");
-        const auto* next = dynamic_cast<Assignment_Stmt*>(loop->body->statements.at(1).get());
-        require(next && next->target && next->target->name == "next" && dynamic_cast<Binary_Expr*>(next->expression.get()),
-                "Wrong Fibonacci update");
-
-        expect_error(path, "x = ;", "1:5", "выражение", "';'");
-        expect_error(path, "print", "1:6", "выражение", "конец файла");
-        expect_error(path, "x=1", "1:4", "';'", "конец файла");
-        expect_error(path, "print (1;", "1:9", "')'", "';'");
-        expect_error(path, "{", "1:2", "'}'", "конец файла");
-        expect_error(path, "if(1) print 2;", "1:7", "'{'", "'print'");
-        expect_error(path, "while(1)", "1:9", "'{'", "конец файла");
-        expect_error(path, "else {}", "1:1", "начало инструкции", "'else'");
-        expect_error(path, "2+3;", "1:1", "начало инструкции", "'2'");
-        expect_error(path, "a=b=1;", "1:4", "';'", "'='");
-        expect_error(path, "if(1){}else print 2;", "1:13", "'{'", "'print'");
-        expect_error(path, "if 1 {}", "1:4", "'('", "'1'");
-        expect_error(path, "if(1 {}", "1:6", "')'", "'{'");
-        expect_error(path, "print ();", "1:8", "выражение", "')'");
-        expect_error(path, "print 1+;", "1:9", "выражение", "';'");
-        expect_error(path, "print (", "1:8", "выражение", "конец файла");
-        expect_error(path, "x 1;", "1:3", "'='", "'1'");
-        expect_error(path, "}", "1:1", "начало инструкции", "'}'");
-        expect_error(path, "\nprint 1\nx=2;", "3:1", "';'", "'x'");
-        expect_error(path, "print 9223372036854775808;", "1:7", "целое число", "'9223372036854775808'");
-        expect_error(path, "print 999999999999999999999999999999999;", "1:7", "целое число",
-                     "'999999999999999999999999999999999'");
-
-        std::cout << "Parser tests passed\n";
-        return 0;
+        EXPECT_EQ(node_as<Variable_Expr>(first.condition).name, "a");
+        EXPECT_EQ(node_as<Variable_Expr>(second.condition).name, "b");
+        EXPECT_EQ(node_as<Variable_Expr>(third.condition).name, "c");
+        if (ending.empty())
+        {
+            EXPECT_EQ(third.alternative, nullptr);
+        }
+        else
+        {
+            EXPECT_TRUE(node_as<Block_Stmt>(third.alternative).statements.empty());
+        }
     }
-    catch (const std::exception& error)
+}
+
+TEST(ParserTest, ParsesWhileConditionAndBody)
+{
+    const auto program = parse_program("while(x>0){x=x-1;}");
+    const auto& loop = node_as<While_Stmt>(program -> statements.at(0));
+    const auto& condition = node_as<Binary_Expr>(loop.condition);
+
+    EXPECT_EQ(condition.operation, Token_Type::Greater);
+    EXPECT_EQ(node_as<Variable_Expr>(condition.left).name, "x");
+    EXPECT_EQ(node_as<Integer_Expr>(condition.right).value, 0);
+    ASSERT_NE(loop.body, nullptr);
+    ASSERT_EQ(loop.body -> statements.size(), 1u);
+    const auto& assignment = node_as<Assignment_Stmt>(loop.body -> statements.at(0));
+    EXPECT_EQ(node_as<Variable_Expr>(assignment.target).name, "x");
+    const auto& difference = node_as<Binary_Expr>(assignment.expression);
+    EXPECT_EQ(difference.operation, Token_Type::Minus);
+    EXPECT_EQ(node_as<Variable_Expr>(difference.left).name, "x");
+    EXPECT_EQ(node_as<Integer_Expr>(difference.right).value, 1);
+}
+
+TEST(ParserTest, PreservesNodeLocations)
+{
+    const auto program = parse_program("\n {\n  print x+12;\n }");
+    const auto& block = node_as<Block_Stmt>(program -> statements.at(0));
+    const auto& print = node_as<Print_Stmt>(block.statements.at(0));
+    const auto& sum = node_as<Binary_Expr>(print.expression);
+
+    expect_location(*program, 1, 1, 0);
+    expect_location(block, 2, 2, 2);
+    expect_location(print, 3, 3, 6);
+    expect_location(node_as<Variable_Expr>(sum.left), 3, 9, 12);
+    expect_location(sum, 3, 10, 13);
+    expect_location(node_as<Integer_Expr>(sum.right), 3, 11, 14);
+}
+
+TEST(ParserTest, NodeTagsMatchDynamicTypes)
+{
+    const auto program = parse_program("x=?; if(x){while(x){print -x-1;}}");
+    const auto& assignment = node_as<Assignment_Stmt>(program -> statements.at(0));
+    const auto& branch = node_as<If_Stmt>(program -> statements.at(1));
+    const auto& body = node_as<Block_Stmt>(branch.body);
+    const auto& loop = node_as<While_Stmt>(body.statements.at(0));
+    ASSERT_NE(loop.body, nullptr);
+    const auto& print = node_as<Print_Stmt>(loop.body -> statements.at(0));
+    const auto& difference = node_as<Binary_Expr>(print.expression);
+
+    EXPECT_EQ(program -> node_type, Node_Type::Block);
+    EXPECT_EQ(assignment.node_type, Node_Type::Assignment);
+    EXPECT_EQ(node_as<Input_Expr>(assignment.expression).node_type, Node_Type::Input);
+    EXPECT_EQ(node_as<Variable_Expr>(branch.condition).node_type, Node_Type::Variable);
+    EXPECT_EQ(branch.node_type, Node_Type::If);
+    EXPECT_EQ(body.node_type, Node_Type::Block);
+    EXPECT_EQ(loop.node_type, Node_Type::While);
+    EXPECT_EQ(print.node_type, Node_Type::Print);
+    EXPECT_EQ(difference.node_type, Node_Type::Binary);
+    EXPECT_EQ(node_as<Unary_Expr>(difference.left).node_type, Node_Type::Unary);
+    EXPECT_EQ(node_as<Integer_Expr>(difference.right).node_type, Node_Type::Integer);
+}
+
+TEST(ParserTest, RejectsOutOfRangeInteger)
+{
+    const std::string literals[] = {"9223372036854775808", "-9223372036854775809", std::string(100, '9')};
+    for (const auto& literal : literals)
     {
-        std::cerr << error.what() << '\n';
-        return 1;
+        expect_parse_error("print " + literal + ";", "диапазоне int64_t");
+    }
+}
+
+TEST(ParserTest, RejectsMissingSemicolon)
+{
+    expect_parse_error("x=1", "';'");
+    expect_parse_error("print 1", "';'");
+    expect_parse_error("x=1\nprint x;", test_file_name() + ":2:1: ошибка: ожидалось ';', получен 'print'");
+}
+
+TEST(ParserTest, RejectsMissingOperand)
+{
+    for (const auto* source : {"x=;", "print 1+;", "print ();"})
+    {
+        expect_parse_error(source, "выражение");
+    }
+}
+
+TEST(ParserTest, RejectsUnclosedDelimiters)
+{
+    expect_parse_error("print (1", "')', получен конец файла");
+    expect_parse_error("{x=1;", "'}', получен конец файла");
+}
+
+TEST(ParserTest, RejectsInvalidStatementForms)
+{
+    for (const auto* source : {"else {}", "a=b=1;", "x+1;", ";", "}"})
+    {
+        SCOPED_TRACE(source);
+        EXPECT_THROW(parse_program(source), std::runtime_error);
+    }
+}
+
+TEST(ParserTest, RequiresBracedControlBodies)
+{
+    for (const auto* source : {"if(1) print 2;", "while(1) print 2;", "if(1){}else print 2;"})
+    {
+        expect_parse_error(source, "'{'");
     }
 }
