@@ -1,0 +1,10 @@
+fst = 0;
+snd = 1;
+n = ?;
+while (n > 0) {
+    next = fst + snd;
+    fst = snd;
+    snd = next;
+    n = n - 1;
+}
+print snd;

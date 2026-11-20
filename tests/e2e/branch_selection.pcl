@@ -1,0 +1,10 @@
+x = ?;
+if (x == 0) {
+    print 10;
+} else if (x == 1) {
+    print 20;
+} else if (x == 2) {
+    print 30;
+} else {
+    print 40;
+}

@@ -285,11 +285,19 @@ TEST(ParserTest, RejectsUnclosedDelimiters)
 
 TEST(ParserTest, RejectsInvalidStatementForms)
 {
-    for (const auto* source : {"else {}", "a=b=1;", "x+1;", ";", "}"})
+    for (const auto* source : {"else {}", "a=b=1;", "x+1;", "}"})
     {
         SCOPED_TRACE(source);
         EXPECT_THROW(parse_program(source), std::runtime_error);
     }
+}
+
+TEST(ParserTest, AcceptsEmptyStatement)
+{
+    const auto program = parse_program(";");
+    ASSERT_NE(program, nullptr);
+    EXPECT_EQ(program -> node_type, Node_Type::Block);
+    EXPECT_TRUE(program -> statements.empty());
 }
 
 TEST(ParserTest, RequiresBracedControlBodies)

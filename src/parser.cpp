@@ -57,6 +57,11 @@ std::unique_ptr<Block_Stmt> Parser::parse_program()
 
     while (!check(Token_Type::EndFile))
     {
+        if (match(Token_Type::Semicolon))
+        {
+            continue;
+        }
+
         program -> statements.push_back(parse_statement());
     }
     return program;
@@ -280,10 +285,24 @@ std::unique_ptr<Expr> Parser::parse_primary()
     }
     if (match(Token_Type::LeftParen))
     {
-        auto expression = parse_expression();
+        auto left = parse_expression();
+
+        if (check(Token_Type::Assign))
+        {
+            if (left -> node_type != Node_Type::Variable)
+            {
+                error("имя переменной слева от '='");
+            }
+
+            const auto operation = *current_token;
+            advance();                       
+            auto right = parse_expression(); 
+
+            left = std::make_unique<Binary_Expr>(operation.location, operation.token_type, std::move(left), std::move(right));
+        }
+
         expect(Token_Type::RightParen, "')'");
-        
-        return expression;
+        return left;
     }
     error("выражение 'value', 'varible', '?' или '('");
 }

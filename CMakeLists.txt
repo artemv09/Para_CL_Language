@@ -61,4 +61,15 @@ if(BUILD_TESTING)
     add_executable(paracl_interpreter_tests tests/interpreter_test.cpp)
     target_link_libraries(paracl_interpreter_tests PRIVATE paracl_runtime GTest::gtest_main)
     gtest_discover_tests(paracl_interpreter_tests PROPERTIES TIMEOUT 5)
+
+    if(TARGET paracl)
+        add_executable(paracl_e2e_tests tests/e2e_test.cpp)
+        target_link_libraries(paracl_e2e_tests PRIVATE paracl_frontend GTest::gtest_main)
+        target_compile_definitions(paracl_e2e_tests PRIVATE
+            PARACL_EXECUTABLE="$<TARGET_FILE:paracl>"
+            PARACL_E2E_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/e2e"
+        )
+        add_dependencies(paracl_e2e_tests paracl)
+        gtest_discover_tests(paracl_e2e_tests PROPERTIES TIMEOUT 5)
+    endif()
 endif()

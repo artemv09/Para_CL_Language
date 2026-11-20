@@ -66,6 +66,14 @@ void Segmantic_Analiz::segmantic_check(Node* node, Assigment_Parent assigment_re
     if (node -> node_type == Node_Type::Binary)
     {
         Binary_Expr* binary = static_cast<Binary_Expr*>(node);
+
+        if (binary -> operation == Token_Type::Assign) 
+        {
+            segmantic_check(binary -> right.get(), Assigment_Parent::Right);
+            segmantic_check(binary -> left.get(), Assigment_Parent::Left);
+            return;
+        }
+
         segmantic_check(binary -> left.get(), Assigment_Parent::Non);
         segmantic_check(binary -> right.get(), Assigment_Parent::Non);
         return;

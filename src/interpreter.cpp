@@ -79,6 +79,17 @@ std::int64_t Interpreter::evaluate(const Expr* node)
     if (node -> node_type == Node_Type::Binary)
     {
         const Binary_Expr* binary = static_cast<const Binary_Expr*>(node);
+
+        if (binary -> operation == Token_Type::Assign)
+        {
+            const auto& target = dynamic_cast<const Variable_Expr&>(*binary -> left);
+            const std::int64_t value = evaluate(binary -> right.get());
+
+            assign_variable(target.name, value);
+            
+            return value;
+        }
+
         std::int64_t left = evaluate(binary -> left.get());
         std::int64_t right = evaluate(binary -> right.get());
 
@@ -140,7 +151,9 @@ std::int64_t Interpreter::evaluate(const Expr* node)
             case Token_Type::Plus: return left;
             case Token_Type::Minus:
                 if (left == std::numeric_limits<std::int64_t>::min())
+                {
                     throw std::runtime_error("переполнение int64_t при смене знака");
+                }
                 return -left;
             default: throw std::runtime_error("несуществующая унарная операция");
         }
