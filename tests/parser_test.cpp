@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
+#include <iterator>
 #include <limits>
+#include <sstream>
 
+#include "graphviz.hpp"
 #include "test_program.hpp"
 
 namespace
@@ -148,6 +151,68 @@ TEST(ParserTest, ParsesNestedUnaryOperators)
     EXPECT_EQ(node_as<Variable_Expr>(plus.operand).name, "x");
 }
 
+TEST(ParserTest, LogicalOrContainsLogicalAndAndUnaryNot)
+{
+    const auto program = parse_program("print a || b && !c;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& conjunction = node_as<Binary_Expr>(root.right);
+    const auto& negation = node_as<Unary_Expr>(conjunction.right);
+
+    EXPECT_EQ(root.operation, Token_Type::LogicOr);
+    EXPECT_EQ(node_as<Variable_Expr>(root.left).name, "a");
+    EXPECT_EQ(conjunction.operation, Token_Type::LogicAnd);
+    EXPECT_EQ(node_as<Variable_Expr>(conjunction.left).name, "b");
+    EXPECT_EQ(negation.operation, Token_Type::LogicNo);
+    EXPECT_EQ(node_as<Variable_Expr>(negation.operand).name, "c");
+}
+
+TEST(ParserTest, EqualityBindsTighterThanLogicalAnd)
+{
+    const auto program = parse_program("print a && b == c;");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& equality = node_as<Binary_Expr>(root.right);
+
+    EXPECT_EQ(root.operation, Token_Type::LogicAnd);
+    EXPECT_EQ(equality.operation, Token_Type::Equal);
+    EXPECT_EQ(node_as<Variable_Expr>(equality.left).name, "b");
+    EXPECT_EQ(node_as<Variable_Expr>(equality.right).name, "c");
+}
+
+TEST(ParserTest, ParenthesesOverrideLogicalPrecedence)
+{
+    const auto program = parse_program("print (a || b) && !(c == d);");
+    const auto& print = node_as<Print_Stmt>(program -> statements.at(0));
+    const auto& root = node_as<Binary_Expr>(print.expression);
+    const auto& negation = node_as<Unary_Expr>(root.right);
+
+    EXPECT_EQ(root.operation, Token_Type::LogicAnd);
+    EXPECT_EQ(node_as<Binary_Expr>(root.left).operation, Token_Type::LogicOr);
+    EXPECT_EQ(negation.operation, Token_Type::LogicNo);
+    EXPECT_EQ(node_as<Binary_Expr>(negation.operand).operation, Token_Type::Equal);
+}
+
+TEST(ParserTest, LogicalOperatorsAreLeftAssociative)
+{
+    const auto program = parse_program("print a || b || c; print a && b && c;");
+    const Token_Type operations[] = {Token_Type::LogicOr, Token_Type::LogicAnd};
+    ASSERT_EQ(program -> statements.size(), std::size(operations));
+
+    for (std::size_t i = 0; i < std::size(operations); ++i)
+    {
+        const auto& print = node_as<Print_Stmt>(program -> statements.at(i));
+        const auto& root = node_as<Binary_Expr>(print.expression);
+        const auto& nested = node_as<Binary_Expr>(root.left);
+
+        EXPECT_EQ(root.operation, operations[i]);
+        EXPECT_EQ(nested.operation, operations[i]);
+        EXPECT_EQ(node_as<Variable_Expr>(nested.left).name, "a");
+        EXPECT_EQ(node_as<Variable_Expr>(nested.right).name, "b");
+        EXPECT_EQ(node_as<Variable_Expr>(root.right).name, "c");
+    }
+}
+
 TEST(ParserTest, ParsesNestedBlocks)
 {
     const auto program = parse_program("{} {{}}");
@@ -167,7 +232,7 @@ TEST(ParserTest, IfWithoutElseHasNoAlternative)
 
     EXPECT_EQ(node_as<Variable_Expr>(branch.condition).name, "x");
     ASSERT_NE(branch.body, nullptr);
-    EXPECT_TRUE(branch.body -> statements.empty());
+    EXPECT_TRUE(node_as<Block_Stmt>(branch.body).statements.empty());
     EXPECT_EQ(branch.alternative, nullptr);
 }
 
@@ -267,6 +332,8 @@ TEST(ParserTest, RejectsMissingSemicolon)
     expect_parse_error("x=1", "';'");
     expect_parse_error("print 1", "';'");
     expect_parse_error("x=1\nprint x;", test_file_name() + ":2:1: ошибка: ожидалось ';', получен 'print'");
+    expect_parse_error("if(1) print 2 else print 3;", "';', получен 'else'");
+    expect_parse_error("if(1){} else x=1", "';', получен конец файла");
 }
 
 TEST(ParserTest, RejectsMissingOperand)
@@ -275,6 +342,8 @@ TEST(ParserTest, RejectsMissingOperand)
     {
         expect_parse_error(source, "выражение");
     }
+    expect_parse_error("print !;", test_file_name() + ":1:8: ошибка: ожидалось выражение, получен ';'");
+    expect_parse_error("print 1 && ;", test_file_name() + ":1:12: ошибка: ожидалось выражение, получен ';'");
 }
 
 TEST(ParserTest, RejectsUnclosedDelimiters)
@@ -285,7 +354,9 @@ TEST(ParserTest, RejectsUnclosedDelimiters)
 
 TEST(ParserTest, RejectsInvalidStatementForms)
 {
-    for (const auto* source : {"else {}", "a=b=1;", "x+1;", "}"})
+    expect_parse_error("else {}", test_file_name() + ":1:1: ошибка: 'else' без соответствующего 'if'");
+    expect_parse_error("print (a || b = 1);", "имя переменной слева от '='");
+    for (const auto* source : {"a=b=1;", "x+1;", "}"})
     {
         SCOPED_TRACE(source);
         EXPECT_THROW(parse_program(source), std::runtime_error);
@@ -300,10 +371,19 @@ TEST(ParserTest, AcceptsEmptyStatement)
     EXPECT_TRUE(program -> statements.empty());
 }
 
-TEST(ParserTest, RequiresBracedControlBodies)
+TEST(ParserTest, ParsesSingleStatementIfAndElseBodies)
 {
-    for (const auto* source : {"if(1) print 2;", "while(1) print 2;", "if(1){}else print 2;"})
-    {
-        expect_parse_error(source, "'{'");
-    }
+    const auto program = parse_program("if(1) print 2; else x=3;");
+    const auto& branch = node_as<If_Stmt>(program -> statements.at(0));
+    const auto& print = node_as<Print_Stmt>(branch.body);
+    const auto& assignment = node_as<Assignment_Stmt>(branch.alternative);
+
+    EXPECT_EQ(node_as<Integer_Expr>(print.expression).value, 2);
+    EXPECT_EQ(node_as<Variable_Expr>(assignment.target).name, "x");
+    EXPECT_EQ(node_as<Integer_Expr>(assignment.expression).value, 3);
+}
+
+TEST(ParserTest, RequiresBracedWhileBody)
+{
+    expect_parse_error("while(1) print 2;", "'{', получен 'print'");
 }

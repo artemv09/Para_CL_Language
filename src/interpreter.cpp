@@ -91,6 +91,15 @@ std::int64_t Interpreter::evaluate(const Expr* node)
         }
 
         std::int64_t left = evaluate(binary -> left.get());
+        if (binary -> operation == Token_Type::LogicAnd)
+        {
+            return left != 0 && condition(binary -> right.get());
+        }
+        if (binary -> operation == Token_Type::LogicOr)
+        {
+            return left != 0 || condition(binary -> right.get());
+        }
+
         std::int64_t right = evaluate(binary -> right.get());
 
         constexpr auto minimum = std::numeric_limits<std::int64_t>::min();
@@ -148,6 +157,7 @@ std::int64_t Interpreter::evaluate(const Expr* node)
 
         switch (unar -> operation)
         {
+            case Token_Type::LogicNo: return (left == 0) ? 1 : 0;
             case Token_Type::Plus: return left;
             case Token_Type::Minus:
                 if (left == std::numeric_limits<std::int64_t>::min())

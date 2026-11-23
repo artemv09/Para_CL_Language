@@ -190,6 +190,9 @@ TEST(LexerTest, RecognizesOperatorsAndDelimiters)
         Token_Type::Assign,
         Token_Type::Equal,
         Token_Type::NotEqual,
+        Token_Type::LogicNo,
+        Token_Type::LogicAnd,
+        Token_Type::LogicOr,
         Token_Type::Less,
         Token_Type::LessEqual,
         Token_Type::Greater,
@@ -202,14 +205,14 @@ TEST(LexerTest, RecognizesOperatorsAndDelimiters)
         Token_Type::Question
     };
     const std::string expected_names[] = {
-        "+", "-", "*", "/", "%", "=", "==", "!=", "<", "<=", ">", ">=", "(", ")", "{", "}", ";", "?"
+        "+", "-", "*", "/", "%", "=", "==", "!=", "!", "&&", "||", "<", "<=", ">", ">=", "(", ")", "{", "}", ";", "?"
     };
 
     {
         std::ofstream file("test_lexer_7.pcl");
         ASSERT_TRUE(file.is_open());
 
-        file << "+ - * / % = == != < <= > >= ( ) { } ; ?";
+        file << "+ - * / % = == != ! && || < <= > >= ( ) { } ; ?";
         file.close();
     }
 
@@ -435,55 +438,57 @@ TEST(LexerTest, RejectsMalformedInteger)
             std::ofstream file("test_lexer_15.pcl");
             ASSERT_TRUE(file.is_open());
 
-            file << sources[i];
+            file << "\n  " << sources[i];
             file.close();
         }
 
         Lexer lexer("test_lexer_15.pcl");
 
-        EXPECT_THROW(lexer.next_token(), std::runtime_error);
+        try
+        {
+            lexer.next_token();
+            FAIL() << "Ожидалась ошибка для литерала " << sources[i];
+        }
+        catch (const std::runtime_error& error)
+        {
+            EXPECT_STREQ(error.what(), "test_lexer_15.pcl:2:3: ошибка: неверный целочисленный литерал");
+        }
     }
 }
 
-TEST(LexerTest, RejectsStandaloneExclamation)
+TEST(LexerTest, RecognizesAdjacentLogicalOperatorsAndTheirLocations)
 {
-    const std::string sources[] = {"!", "!x"};
-
-    for (std::size_t i = 0; i < std::size(sources); ++i)
-    {
-        SCOPED_TRACE(sources[i]);
-
-        {
-            std::ofstream file("test_lexer_16.pcl");
-            ASSERT_TRUE(file.is_open());
-
-            file << sources[i];
-            file.close();
-        }
-
-        Lexer lexer("test_lexer_16.pcl");
-
-        EXPECT_THROW(lexer.next_token(), std::runtime_error);
-    }
-
-    {
-        std::ofstream file("test_lexer_16.pcl");
-        ASSERT_TRUE(file.is_open());
-
-        file << "!=";
-        file.close();
-    }
+    std::ofstream file("test_lexer_16.pcl");
+    ASSERT_TRUE(file.is_open());
+    file << "!x\na!=b&&c||d";
+    file.close();
 
     Lexer lexer("test_lexer_16.pcl");
-    const auto token = lexer.next_token();
-    const auto end = lexer.next_token();
+    const Token_Value expected_tokens[] = {
+        {Token_Type::LogicNo,    "!",  {1, 1, 0}},
+        {Token_Type::Identifier, "x",  {1, 2, 1}},
+        {Token_Type::Identifier, "a",  {2, 1, 3}},
+        {Token_Type::NotEqual,   "!=", {2, 2, 4}},
+        {Token_Type::Identifier, "b",  {2, 4, 6}},
+        {Token_Type::LogicAnd,   "&&", {2, 5, 7}},
+        {Token_Type::Identifier, "c",  {2, 7, 9}},
+        {Token_Type::LogicOr,    "||", {2, 8, 10}},
+        {Token_Type::Identifier, "d",  {2, 10, 12}},
+        {Token_Type::EndFile,    "",   {2, 11, 13}}
+    };
 
-    ASSERT_NE(token, nullptr);
-    EXPECT_EQ(token -> token_type, Token_Type::NotEqual);
-    EXPECT_EQ(token -> token_name, "!=");
+    for (const auto& expected : expected_tokens)
+    {
+        SCOPED_TRACE(expected.token_name);
+        const auto token = lexer.next_token();
 
-    ASSERT_NE(end, nullptr);
-    EXPECT_EQ(end -> token_type, Token_Type::EndFile);
+        ASSERT_NE(token, nullptr);
+        EXPECT_EQ(token -> token_type, expected.token_type);
+        EXPECT_EQ(token -> token_name, expected.token_name);
+        EXPECT_EQ(token -> location.line, expected.location.line);
+        EXPECT_EQ(token -> location.column, expected.location.column);
+        EXPECT_EQ(token -> location.offset, expected.location.offset);
+    }
 }
 
 TEST(LexerTest, ReportsLexicalErrorLocation)
@@ -524,5 +529,31 @@ TEST(LexerTest, ReportsLexicalErrorLocation)
 
         EXPECT_NE(message.find("test_lexer_17.pcl:2:7: ошибка:"), std::string::npos) << message;
         EXPECT_NE(message.find('@'), std::string::npos);
+    }
+}
+
+TEST(LexerTest, ReportsIncompleteLogicalOperatorLocation)
+{
+    const std::string file_name = "test_lexer_18.pcl";
+    for (const std::string operation : {"&&", "||"})
+    {
+        SCOPED_TRACE(operation);
+        std::ofstream file(file_name);
+        ASSERT_TRUE(file.is_open());
+        file << "// comment\n  " << operation.front() << " x";
+        file.close();
+
+        Lexer lexer(file_name);
+        try
+        {
+            lexer.next_token();
+            FAIL() << "Ожидалась ошибка для одиночного " << operation.front();
+        }
+        catch (const std::runtime_error& error)
+        {
+            const std::string expected = file_name + ":2:3: ошибка: ожидался второй '" + operation.front() +
+                "' для оператора '" + operation + "'";
+            EXPECT_EQ(error.what(), expected);
+        }
     }
 }

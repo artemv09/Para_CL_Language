@@ -36,7 +36,11 @@ enum class Token_Type
     LeftBrace,
     RightBrace,
     Semicolon,
-    Question
+    Question,
+    
+    LogicNo,
+    LogicAnd,
+    LogicOr
 };
 
 typedef struct 

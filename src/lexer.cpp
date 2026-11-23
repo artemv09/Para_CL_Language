@@ -140,7 +140,8 @@ std::unique_ptr<Token_Value> Lexer::next_token()
 
         if (iterator_code != end && is_identifier_start(*iterator_code))
         {
-            throw std::runtime_error("Invalid integer literal");
+            const Diagnostic diagnostic{token_location, "неверный целочисленный литерал"};
+            throw std::runtime_error(diagnostic.format(file_name));
         }
 
         return create_token(Token_Type::Integer, std::string(start, iterator_code), token_location);
@@ -190,12 +191,27 @@ std::unique_ptr<Token_Value> Lexer::next_token()
             break;
 
         case '!':
-            if (iterator_code == end || *iterator_code != '=')
+            if (iterator_code != end && *iterator_code == '=')
             {
-                throw std::runtime_error("Expected '=' after '!'");
+                advance();
+                token_type = Token_Type::NotEqual;
+            }
+            else
+            {
+                token_type = Token_Type::LogicNo;
+            }
+            break;
+
+        case '&':
+        case '|':
+            if (iterator_code == end || *iterator_code != character)
+            {
+                const Diagnostic diagnostic{token_location, std::string("ожидался второй '") + character +
+                                            "' для оператора '" + std::string(2, character) + "'"};
+                throw std::runtime_error(diagnostic.format(file_name));
             }
             advance();
-            token_type = Token_Type::NotEqual;
+            token_type = (character == '&') ? Token_Type::LogicAnd : Token_Type::LogicOr;
             break;
 
         case '+':

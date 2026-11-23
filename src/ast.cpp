@@ -24,6 +24,10 @@ namespace
             case Token_Type::GreaterEqual: return ">=";
             case Token_Type::Equal: return "==";
             case Token_Type::NotEqual: return "!=";
+            case Token_Type::LogicNo: return "!";
+            case Token_Type::LogicAnd: return "&&";
+            case Token_Type::LogicOr: return "||";
+            case Token_Type::Assign: return "=";
             default: return "unknown";
         }
     }
@@ -124,7 +128,7 @@ std::size_t Block_Stmt::write_graphviz(Graphviz_Writer& writer) const
     return id;
 }
 
-If_Stmt::If_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Block_Stmt> body, std::unique_ptr<Stmt> alternative)
+If_Stmt::If_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> alternative)
 : Stmt(location, Node_Type::If), condition(std::move(condition)), body(std::move(body)), alternative(std::move(alternative))
 {
 }

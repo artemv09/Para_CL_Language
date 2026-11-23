@@ -130,10 +130,10 @@ class If_Stmt : public Stmt
 {
     public:
         std::unique_ptr<Expr> condition;
-        std::unique_ptr<Block_Stmt> body;
+        std::unique_ptr<Stmt> body;
         std::unique_ptr<Stmt> alternative;
 
-        explicit If_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Block_Stmt> body, std::unique_ptr<Stmt> alternative);
+        explicit If_Stmt(Source_Location location, std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body, std::unique_ptr<Stmt> alternative);
         std::size_t write_graphviz(Graphviz_Writer& writer) const override;
 };
 

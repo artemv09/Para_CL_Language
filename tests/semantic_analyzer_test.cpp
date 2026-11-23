@@ -75,6 +75,15 @@ TEST(SemanticAnalyzerTest, ChecksUnreachableBranch)
 {
     Segmantic_Analiz analyzer(test_file_name());
     expect_undeclared(analyzer, "if(0){print unknown;}", "unknown");
+    expect_undeclared(analyzer, "if(0) print unknown;", "unknown");
+    expect_undeclared(analyzer, "if(1){} else print unknown;", "unknown");
+}
+
+TEST(SemanticAnalyzerTest, ChecksShortCircuitedOperands)
+{
+    Segmantic_Analiz analyzer(test_file_name());
+    expect_undeclared(analyzer, "print 1 || unknown;", "unknown");
+    expect_undeclared(analyzer, "print 0 && unknown;", "unknown");
 }
 
 TEST(SemanticAnalyzerTest, ChecksControlConditions)
@@ -87,7 +96,7 @@ TEST(SemanticAnalyzerTest, ChecksControlConditions)
 TEST(SemanticAnalyzerTest, ChecksNestedExpressions)
 {
     Segmantic_Analiz analyzer(test_file_name());
-    for (const auto* source : {"print -a;", "print a+1;", "print 1+a;"})
+    for (const auto* source : {"print -a;", "print !a;", "print a+1;", "print 1+a;"})
     {
         expect_undeclared(analyzer, source, "a");
     }

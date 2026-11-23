@@ -134,6 +134,36 @@ TEST(E2E, EmptyStatementBeforeWhile)
     expect_success(run_paracl("003.pcl", "1\n0\n"), "");
 }
 
+TEST(E2E, FibonacciNumberAtZero)
+{
+    expect_success(run_paracl("004.pcl", "0\n"), "0\n");
+}
+
+TEST(E2E, FibonacciNumberAtFive)
+{
+    expect_success(run_paracl("004.pcl", "5\n"), "5\n");
+}
+
+TEST(E2E, NestedIfSelectsThree)
+{
+    expect_success(run_paracl("005.pcl", "1 1"), "3\n");
+}
+
+TEST(E2E, NestedIfSelectsTwo)
+{
+    expect_success(run_paracl("005.pcl", "1 0"), "2\n");
+}
+
+TEST(E2E, NestedElseIfSelectsOne)
+{
+    expect_success(run_paracl("005.pcl", "0 1"), "1\n");
+}
+
+TEST(E2E, NestedElseSelectsZero)
+{
+    expect_success(run_paracl("005.pcl", "0 0"), "0\n");
+}
+
 TEST(E2E, FibonacciZeroIterations)
 {
     expect_success(run_paracl("fibonacci.pcl", "0\n"), "1\n");

@@ -76,7 +76,12 @@ std::unique_ptr<Stmt> Parser::parse_statement()
         case Token_Type::LeftBrace: return parse_block();
         case Token_Type::If: return parse_if();
         case Token_Type::While: return parse_while();
-        default: error("начало инструкции 'varible', 'print', '{', 'if' или 'while'");
+        case Token_Type::Else:
+        {
+            const Diagnostic diagnostic{current_token -> location, "'else' без соответствующего 'if'"};
+            throw std::runtime_error(diagnostic.format(file_name));
+        }
+        default: error("начало инструкции (имя переменной, 'print', '{', 'if' или 'while')");
     }
 }
 
@@ -135,20 +140,13 @@ std::unique_ptr<Stmt> Parser::parse_if()
 
     expect(Token_Type::RightParen, "')'");
 
-    auto body = parse_block();
+    auto body = parse_statement(); // change parse_block --> parse_statement
 
     std::unique_ptr<Stmt> alternative;
 
     if (match(Token_Type::Else))
     {
-        if (check(Token_Type::If))
-        {
-            alternative = parse_if();
-        }
-        else
-        {
-            alternative = parse_block();
-        }
+        alternative = parse_statement();
     }
     return std::make_unique<If_Stmt>(token.location, std::move(condition), std::move(body), std::move(alternative));
 }
@@ -170,7 +168,37 @@ std::unique_ptr<Stmt> Parser::parse_while()
 
 std::unique_ptr<Expr> Parser::parse_expression()
 {
-    return parse_equality();
+    return parse_logical_or();
+}
+
+std::unique_ptr<Expr> Parser::parse_logical_or()
+{
+    auto left = parse_logical_and();
+
+    while (check(Token_Type::LogicOr))
+    {
+        const auto operation = *current_token;
+        advance();
+
+        auto right = parse_logical_and();
+        left = std::make_unique<Binary_Expr>(operation.location, operation.token_type, std::move(left), std::move(right));
+    }
+    return left;
+}
+
+std::unique_ptr<Expr> Parser::parse_logical_and()
+{
+    auto left = parse_equality();
+
+    while (check(Token_Type::LogicAnd))
+    {
+        const auto operation = *current_token;
+        advance();
+
+        auto right = parse_equality();
+        left = std::make_unique<Binary_Expr>(operation.location, operation.token_type, std::move(left), std::move(right));
+    }
+    return left;
 }
 
 std::unique_ptr<Expr> Parser::parse_equality()
@@ -242,7 +270,7 @@ std::unique_ptr<Expr> Parser::parse_multiplicative()
 
 std::unique_ptr<Expr> Parser::parse_unary()
 {
-    if (check(Token_Type::Plus) || check(Token_Type::Minus))
+    if (check(Token_Type::Plus) || check(Token_Type::Minus) || check(Token_Type::LogicNo))
     {
         const auto operation = *current_token;
 
@@ -304,5 +332,5 @@ std::unique_ptr<Expr> Parser::parse_primary()
         expect(Token_Type::RightParen, "')'");
         return left;
     }
-    error("выражение 'value', 'varible', '?' или '('");
+    error("выражение");
 }

@@ -24,6 +24,8 @@ class Parser
         std::unique_ptr<Stmt> parse_if();
         std::unique_ptr<Stmt> parse_while();
         std::unique_ptr<Expr> parse_expression();
+        std::unique_ptr<Expr> parse_logical_or();
+        std::unique_ptr<Expr> parse_logical_and();
         std::unique_ptr<Expr> parse_equality();
         std::unique_ptr<Expr> parse_comparison();
         std::unique_ptr<Expr> parse_additive();
