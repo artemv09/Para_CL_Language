@@ -116,11 +116,13 @@ namespace
         EXPECT_EQ(result.stderr_text, "");
     }
 
-    void expect_error(const Run_Result& result, const std::string& expected_output, const std::string& diagnostic)
+    void expect_error(const std::string& file_name, const std::string& input, const std::string& expected_output, const std::string& diagnostic)
     {
+        const auto result = run_paracl(file_name, input);
+        const auto program = fs::path(PARACL_E2E_DIR) / file_name;
         EXPECT_NE(result.exit_code, 0);
         EXPECT_EQ(result.stdout_text, expected_output);
-        EXPECT_NE(result.stderr_text.find(diagnostic), std::string::npos) << "Ожидалось: " << diagnostic << "\nПолучено: " << result.stderr_text;
+        EXPECT_EQ(result.stderr_text, program.generic_string() + ":" + diagnostic + "\n");
     }
 }
 
@@ -206,10 +208,15 @@ TEST(E2E, AssignmentReadsInputOnce)
 
 TEST(E2E, VariableOutsideScope)
 {
-    expect_error(run_paracl("undeclared_variable.pcl", ""), "", "переменная 'y' не объявлена");
+    expect_error("undeclared_variable.pcl", "", "", "4:7: ошибка: переменная 'y' не объявлена");
 }
 
 TEST(E2E, DivisionByZero)
 {
-    expect_error(run_paracl("division_by_zero.pcl", ""), "42\n", "деление на ноль");
+    expect_error("division_by_zero.pcl", "", "42\n", "3:10: ошибка: деление на ноль");
+}
+
+TEST(E2E, InvalidInputLocation)
+{
+    expect_error("assignment_input.pcl", "7 abc", "7\n7\n", "3:7: ошибка: ошибка ввода целого числа");
 }

@@ -35,7 +35,7 @@ namespace
         Test_Streams streams;
         streams.input.str(input);
 
-        Interpreter interpreter;
+        Interpreter interpreter(test_file_name());
         try
         {
             interpreter.run_code(program.get());
@@ -210,12 +210,17 @@ TEST(InterpreterTest, DivisionByZero)
 
 TEST(InterpreterTest, ModuloByZero)
 {
-    expect_runtime_error("print 1%0;", "деление на ноль");
+    expect_runtime_error("print 1%0;", test_file_name() + ":1:8: ошибка: деление на ноль");
+}
+
+TEST(InterpreterTest, MissingVariableLocation)
+{
+    expect_runtime_error("if(0) x=1;\nprint x;", test_file_name() + ":2:7: ошибка: Переменная 'x' не объявлена");
 }
 
 TEST(InterpreterTest, AdditionOverflow)
 {
-    expect_runtime_error("print ?+1;", "переполнение", maximum);
+    expect_runtime_error("print ?+1;", test_file_name() + ":1:8: ошибка: переполнение int64_t при сложении", maximum);
     expect_runtime_error("print ?+(-1);", "переполнение", minimum);
 }
 
@@ -235,7 +240,7 @@ TEST(InterpreterTest, MultiplicationOverflow)
 
 TEST(InterpreterTest, NegationOverflow)
 {
-    expect_runtime_error("x=?; print -x;", "переполнение", minimum);
+    expect_runtime_error("x=?; print -x;", test_file_name() + ":1:12: ошибка: переполнение int64_t при смене знака", minimum);
 }
 
 TEST(InterpreterTest, DivisionOverflow)

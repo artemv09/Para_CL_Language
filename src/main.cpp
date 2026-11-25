@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 
         dump_graphviz(*program, file_name);
 
-        Interpreter interpreter;
+        Interpreter interpreter(file_name);
         interpreter.run_code(program.get());
     }
     catch (const std::exception& error)

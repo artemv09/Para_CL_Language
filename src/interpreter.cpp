@@ -3,9 +3,16 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
-Interpreter::Interpreter(): input(std::cin), output(std::cout)
+Interpreter::Interpreter(std::string file_name): file_name(std::move(file_name)), input(std::cin), output(std::cout)
 {
+}
+
+void Interpreter::error(const Source_Location& location, const std::string& message) const
+{
+    const Diagnostic diagnostic{location, message};
+    throw std::runtime_error(diagnostic.format(file_name));
 }
 
 void Interpreter::run_code(const Node* program)
@@ -110,13 +117,13 @@ std::int64_t Interpreter::evaluate(const Expr* node)
             case Token_Type::Plus:
                 if ((right > 0 && left > maximum - right) || (right < 0 && left < minimum - right))
                 {
-                    throw std::runtime_error("переполнение int64_t при сложении");
+                    error(binary -> location, "переполнение int64_t при сложении");
                 }
                 return left + right;
             case Token_Type::Minus:
                 if ((right > 0 && left < minimum + right) || (right < 0 && left > maximum + right))
                 {
-                    throw std::runtime_error("переполнение int64_t при вычитании");
+                    error(binary -> location, "переполнение int64_t при вычитании");
                 }
                 return left - right;
             case Token_Type::Multiplic:
@@ -125,19 +132,18 @@ std::int64_t Interpreter::evaluate(const Expr* node)
                     (left < 0 && right > 0 && left < minimum / right) ||
                     (left < 0 && right < 0 && left < maximum / right))
                 {
-                    throw std::runtime_error("переполнение int64_t при умножении");
+                    error(binary -> location, "переполнение int64_t при умножении");
                 }
                 return left * right;
             case Token_Type::Division:
             case Token_Type::Percent:
                 if (right == 0)
                 {
-                    throw std::runtime_error("деление на ноль");
+                    error(binary -> location, "деление на ноль");
                 }
                 if (left == minimum && right == -1)
                 {
-                    throw std::runtime_error(
-                        "переполнение int64_t при делении или вычислении остатка");
+                    error(binary -> location, "переполнение int64_t при делении или вычислении остатка");
                 }
                 return (binary -> operation == Token_Type::Division) ? left / right : left % right;
             case Token_Type::Less: return left < right;
@@ -146,7 +152,7 @@ std::int64_t Interpreter::evaluate(const Expr* node)
             case Token_Type::GreaterEqual: return left >= right;
             case Token_Type::Equal: return left == right;
             case Token_Type::NotEqual: return left != right;
-            default: throw std::runtime_error("несуществующая бинарная операция");
+            default: error(binary -> location, "несуществующая бинарная операция");
         }
 
     }
@@ -162,15 +168,15 @@ std::int64_t Interpreter::evaluate(const Expr* node)
             case Token_Type::Minus:
                 if (left == std::numeric_limits<std::int64_t>::min())
                 {
-                    throw std::runtime_error("переполнение int64_t при смене знака");
+                    error(unar -> location, "переполнение int64_t при смене знака");
                 }
                 return -left;
-            default: throw std::runtime_error("несуществующая унарная операция");
+            default: error(unar -> location, "несуществующая унарная операция");
         }
     }
     if (node -> node_type == Node_Type::Variable)
     {
-        return read_variable(static_cast<const Variable_Expr*>(node) -> name); 
+        return read_variable(static_cast<const Variable_Expr&>(*node));
     }
     if (node -> node_type == Node_Type::Integer)
     {
@@ -181,11 +187,11 @@ std::int64_t Interpreter::evaluate(const Expr* node)
         std::int64_t value;
         if (!(input >> value))
         {
-            throw std::runtime_error("ошибка ввода целого числа");
+            error(node -> location, "ошибка ввода целого числа");
         }
         return value;
     }
-    throw std::runtime_error("ожидалось выражение");
+    error(node -> location, "ожидалось выражение");
 }
 
 void Interpreter::assign_variable(const std::string& name, std::int64_t value)
@@ -204,19 +210,19 @@ void Interpreter::assign_variable(const std::string& name, std::int64_t value)
     scopes.back().emplace(name, value);
 }
 
-std::int64_t Interpreter::read_variable(const std::string& name) const
+std::int64_t Interpreter::read_variable(const Variable_Expr& variable) const
 {
     for (auto scope = scopes.rbegin(); scope != scopes.rend(); ++scope)
     {
-        const auto variable = scope -> find(name);
+        const auto found = scope -> find(variable.name);
 
-        if (variable != scope -> end())
+        if (found != scope -> end())
         {
-            return variable -> second;
+            return found -> second;
         }
     }
 
-    throw std::runtime_error("Переменная '" + name + "' не объявлена");
+    error(variable.location, "Переменная '" + variable.name + "' не объявлена");
 }
 
 bool Interpreter::condition(const Expr* expression)
